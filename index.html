@@ -3,22 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Game Sequence</title>
+  <title>Contra</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
     <section class="game-panel">
-      <h1>Game Sequence</h1>
-      <p class="status">Challenge: <span id="game-title">Tic Tac Toe</span></p>
-      <p class="status">Level: <span id="game-index">1</span>/10</p>
-      <p class="status">Status: <span id="game-status">Your turn.</span></p>
-      <div class="board" id="game-board"></div>
+      <h1>Contra</h1>
+      <p class="status">Score: <span id="score">0</span></p>
+      <p class="status">Health: <span id="health">3</span></p>
+      <div id="game-screen" class="game-screen"></div>
       <div class="controls">
         <button id="restart">Restart</button>
-        <button id="next-game" disabled>Next Game</button>
       </div>
-      <p class="instructions" id="game-description">Beat the unbeatable AI in Tic Tac Toe, then move to the next challenge.</p>
+      <p class="instructions">Use arrow keys to move, X to jump, Z to shoot. Survive waves of enemies in this Contra-style shooter.</p>
     </section>
   </main>
   <script src="script.js"></script>
