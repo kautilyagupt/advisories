@@ -82,11 +82,51 @@ h1 {
   border: 2px solid #fb7185;
 }
 
-.bullet {
-  width: 16px;
-  height: 6px;
+.bullet,
+.enemy-bullet {
+  position: absolute;
+  will-change: transform;
   border-radius: 999px;
+}
+
+.bullet {
+  width: 18px;
+  height: 6px;
   background: var(--bullet);
+}
+
+.enemy-bullet {
+  width: 12px;
+  height: 6px;
+  background: linear-gradient(90deg, #f43f5e, #fb7185);
+}
+
+.game-over {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(6px);
+  z-index: 10;
+}
+
+.game-over-card {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 24px;
+  padding: 28px;
+  text-align: center;
+}
+
+.game-over-card h2 {
+  margin: 0 0 12px;
+  font-size: 2rem;
+}
+
+.game-over-card p {
+  margin: 8px 0;
+  color: #cbd5e1;
 }
 
 .ground {

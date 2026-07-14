@@ -6,19 +6,20 @@ const restartButton = document.getElementById('restart');
 const PLAYER_SPEED = 4;
 const JUMP_FORCE = 14;
 const GRAVITY = 0.75;
-const BULLET_SPEED = 10;
-const ENEMY_SPEED = 2.2;
-const ENEMY_SPAWN_MIN = 1200;
-const ENEMY_SPAWN_MAX = 1800;
+const BULLET_SPEED = 12;
+const ENEMY_SPEED = 2.8;
+const ENEMY_BULLET_SPEED = 6;
+const ENEMY_SPAWN_MIN = 900;
+const ENEMY_SPAWN_MAX = 1600;
 
 let gameState = {
   score: 0,
   health: 3,
   bullets: [],
+  enemyBullets: [],
   enemies: [],
   keys: { left: false, right: false, jump: false, shoot: false },
   player: { x: 40, y: 0, vy: 0, width: 40, height: 40, canJump: true },
-  lastSpawn: 0,
   lastShot: 0,
   gameActive: true,
 };
@@ -79,7 +80,14 @@ function createEnemy() {
   const element = document.createElement('div');
   element.className = 'enemy';
   gameScreen.appendChild(element);
-  gameState.enemies.push({ x: gameScreen.clientWidth + 40, y: groundY - 40, width: 36, height: 36, element });
+  gameState.enemies.push({ x: gameScreen.clientWidth + 40, y: groundY - 40, width: 36, height: 36, element, lastShot: Date.now() });
+}
+
+function createEnemyBullet(x, y) {
+  const element = document.createElement('div');
+  element.className = 'enemy-bullet';
+  gameScreen.appendChild(element);
+  gameState.enemyBullets.push({ x, y, width: 12, height: 6, element });
 }
 
 function updateHUD() {
@@ -132,43 +140,71 @@ function gameLoop() {
     }
   }
 
-  gameState.bullets.forEach((bullet, index) => {
+  for (let i = gameState.bullets.length - 1; i >= 0; i--) {
+    const bullet = gameState.bullets[i];
     bullet.x += BULLET_SPEED;
     bullet.element.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
     if (bullet.x > screenWidth) {
       bullet.element.remove();
-      gameState.bullets.splice(index, 1);
+      gameState.bullets.splice(i, 1);
     }
-  });
+  }
 
-  gameState.enemies.forEach((enemy, index) => {
+  for (let i = gameState.enemyBullets.length - 1; i >= 0; i--) {
+    const bullet = gameState.enemyBullets[i];
+    bullet.x -= ENEMY_BULLET_SPEED;
+    bullet.element.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
+
+    if (bullet.x + bullet.width < 0) {
+      bullet.element.remove();
+      gameState.enemyBullets.splice(i, 1);
+      continue;
+    }
+
+    if (rectsCollide(bullet, player)) {
+      bullet.element.remove();
+      gameState.enemyBullets.splice(i, 1);
+      hitPlayer();
+      continue;
+    }
+  }
+
+  for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+    const enemy = gameState.enemies[i];
     enemy.x -= ENEMY_SPEED;
     enemy.element.style.transform = `translate(${enemy.x}px, ${enemy.y}px)`;
 
     if (enemy.x + enemy.width < 0) {
       enemy.element.remove();
-      gameState.enemies.splice(index, 1);
-      return;
+      gameState.enemies.splice(i, 1);
+      continue;
     }
 
     if (rectsCollide(player, enemy)) {
       enemy.element.remove();
-      gameState.enemies.splice(index, 1);
+      gameState.enemies.splice(i, 1);
       hitPlayer();
-      return;
+      continue;
     }
 
-    gameState.bullets.forEach((bullet, bulletIndex) => {
+    if (Date.now() - enemy.lastShot > 950 && Math.random() < 0.18) {
+      enemy.lastShot = Date.now();
+      createEnemyBullet(enemy.x, enemy.y + enemy.height / 2 - 3);
+    }
+
+    for (let j = gameState.bullets.length - 1; j >= 0; j--) {
+      const bullet = gameState.bullets[j];
       if (rectsCollide(bullet, enemy)) {
         bullet.element.remove();
         enemy.element.remove();
-        gameState.bullets.splice(bulletIndex, 1);
-        gameState.enemies.splice(index, 1);
+        gameState.bullets.splice(j, 1);
+        gameState.enemies.splice(i, 1);
         gameState.score += 10;
         updateHUD();
+        break;
       }
-    });
-  });
+    }
+  }
 
   if (gameState.gameActive) {
     animationFrame = window.requestAnimationFrame(gameLoop);
