@@ -1,272 +1,185 @@
-const gameScreen = document.getElementById('game-screen');
-const scoreElement = document.getElementById('score');
-const healthElement = document.getElementById('health');
-const restartButton = document.getElementById('restart');
+const formInput = document.getElementById('product-input');
+const searchButton = document.getElementById('search-button');
+const resultsContainer = document.getElementById('results');
 
-const PLAYER_SPEED = 4;
-const JUMP_FORCE = 14;
-const GRAVITY = 0.75;
-const BULLET_SPEED = 12;
-const ENEMY_SPEED = 2.8;
-const ENEMY_BULLET_SPEED = 6;
-const ENEMY_SPAWN_MIN = 900;
-const ENEMY_SPAWN_MAX = 1600;
-
-let gameState = {
-  score: 0,
-  health: 3,
-  bullets: [],
-  enemyBullets: [],
-  enemies: [],
-  keys: { left: false, right: false, jump: false, shoot: false },
-  player: { x: 40, y: 0, vy: 0, width: 40, height: 40, canJump: true },
-  lastShot: 0,
-  gameActive: true,
-};
-
-let playerElement = null;
-let groundY = 0;
-let animationFrame = null;
-let spawnTimeout = null;
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function initGame() {
-  gameState.score = 0;
-  gameState.health = 3;
-  gameState.bullets = [];
-  gameState.enemies = [];
-  gameState.keys = { left: false, right: false, jump: false, shoot: false };
-  gameState.player = { x: 40, y: 0, vy: 0, width: 40, height: 40, canJump: true };
-  gameState.lastSpawn = Date.now();
-  gameState.lastShot = 0;
-  gameState.gameActive = true;
-
-  gameScreen.innerHTML = '';
-  gameScreen.appendChild(createGround());
-  playerElement = createPlayer();
-  gameScreen.appendChild(playerElement);
-  updateHUD();
-  cancelAnimationFrame(animationFrame);
-  if (spawnTimeout) {
-    window.clearTimeout(spawnTimeout);
-  }
-  scheduleSpawn();
-  animationFrame = window.requestAnimationFrame(gameLoop);
-}
-
-function createGround() {
-  const ground = document.createElement('div');
-  ground.className = 'ground';
-  return ground;
-}
-
-function createPlayer() {
-  const element = document.createElement('div');
-  element.className = 'player';
-  return element;
-}
-
-function createBullet(x, y) {
-  const element = document.createElement('div');
-  element.className = 'bullet';
-  gameScreen.appendChild(element);
-  gameState.bullets.push({ x, y, width: 16, height: 6, element });
-}
-
-function createEnemy() {
-  const element = document.createElement('div');
-  element.className = 'enemy';
-  gameScreen.appendChild(element);
-  gameState.enemies.push({ x: gameScreen.clientWidth + 40, y: groundY - 40, width: 36, height: 36, element, lastShot: Date.now() });
-}
-
-function createEnemyBullet(x, y) {
-  const element = document.createElement('div');
-  element.className = 'enemy-bullet';
-  gameScreen.appendChild(element);
-  gameState.enemyBullets.push({ x, y, width: 12, height: 6, element });
-}
-
-function updateHUD() {
-  scoreElement.textContent = `${gameState.score}`;
-  healthElement.textContent = `${gameState.health}`;
-}
-
-function scheduleSpawn() {
-  if (!gameState.gameActive) return;
-  const delay = ENEMY_SPAWN_MIN + Math.random() * (ENEMY_SPAWN_MAX - ENEMY_SPAWN_MIN);
-  spawnTimeout = window.setTimeout(() => {
-    if (!gameState.gameActive) return;
-    createEnemy();
-    scheduleSpawn();
-  }, delay);
-}
-
-function gameLoop() {
-  if (!gameState.gameActive) return;
-  const screenWidth = gameScreen.clientWidth;
-  const screenHeight = gameScreen.clientHeight;
-  groundY = screenHeight - 58;
-
-  const player = gameState.player;
-  if (gameState.keys.left) player.x -= PLAYER_SPEED;
-  if (gameState.keys.right) player.x += PLAYER_SPEED;
-
-  if (gameState.keys.jump && player.canJump) {
-    player.vy = -JUMP_FORCE;
-    player.canJump = false;
-  }
-
-  player.vy += GRAVITY;
-  player.y += player.vy;
-
-  if (player.y >= groundY - player.height) {
-    player.y = groundY - player.height;
-    player.vy = 0;
-    player.canJump = true;
-  }
-
-  player.x = clamp(player.x, 10, screenWidth - player.width - 10);
-  playerElement.style.transform = `translate(${player.x}px, ${player.y}px)`;
-
-  if (gameState.keys.shoot) {
-    const now = Date.now();
-    if (now - gameState.lastShot > 260) {
-      gameState.lastShot = now;
-      createBullet(player.x + player.width, player.y + player.height / 2 - 3);
+const PRODUCTS = [
+  {
+    name: 'iphone 14',
+    display: 'Apple iPhone 14',
+    amazon: {
+      price: '₹79,900',
+      rating: '4.6 / 5',
+      reviews: '12,345 ratings',
+      deals: 'No-cost EMI available',
+      url: 'https://www.amazon.in/dp/B0BDJXN4TM'
+    },
+    flipkart: {
+      price: '₹78,499',
+      rating: '4.5 / 5',
+      reviews: '9,120 ratings',
+      deals: 'Exchange offer up to ₹14,600',
+      url: 'https://www.flipkart.com/apple-iphone-14'
+    }
+  },
+  {
+    name: 'mi band 7',
+    display: 'Mi Smart Band 7',
+    amazon: {
+      price: '₹2,999',
+      rating: '4.2 / 5',
+      reviews: '24,600 ratings',
+      deals: '₹500 instant discount',
+      url: 'https://www.amazon.in/dp/B09ZRRJ23D'
+    },
+    flipkart: {
+      price: '₹2,799',
+      rating: '4.3 / 5',
+      reviews: '18,900 ratings',
+      deals: 'Bank offer up to 10%',
+      url: 'https://www.flipkart.com/mi-smart-band-7'
+    }
+  },
+  {
+    name: 'noise earbuds',
+    display: 'Noise Buds Earbuds',
+    amazon: {
+      price: '₹1,799',
+      rating: '4.1 / 5',
+      reviews: '15,200 ratings',
+      deals: 'Flat ₹250 off',
+      url: 'https://www.amazon.in/dp/B09PZY6WS4'
+    },
+    flipkart: {
+      price: '₹1,699',
+      rating: '4.0 / 5',
+      reviews: '10,870 ratings',
+      deals: 'Free delivery',
+      url: 'https://www.flipkart.com/noise-buds-earbuds'
+    }
+  },
+  {
+    name: 'ps5',
+    display: 'Sony PlayStation 5',
+    amazon: {
+      price: '₹49,990',
+      rating: '4.8 / 5',
+      reviews: '3,540 ratings',
+      deals: 'EMI from ₹4,166',
+      url: 'https://www.amazon.in/dp/B09P7LTGSS'
+    },
+    flipkart: {
+      price: '₹49,990',
+      rating: '4.7 / 5',
+      reviews: '3,280 ratings',
+      deals: 'Free installation available',
+      url: 'https://www.flipkart.com/sony-ps5'
     }
   }
+];
 
-  for (let i = gameState.bullets.length - 1; i >= 0; i--) {
-    const bullet = gameState.bullets[i];
-    bullet.x += BULLET_SPEED;
-    bullet.element.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
-    if (bullet.x > screenWidth) {
-      bullet.element.remove();
-      gameState.bullets.splice(i, 1);
-    }
+function findProduct(query) {
+  const normalized = query.trim().toLowerCase();
+  return PRODUCTS.find(product => product.name.includes(normalized) || product.display.toLowerCase().includes(normalized));
+}
+
+function buildStoreCard(storeName, data, badgeClass) {
+  return `
+    <div class="store-card">
+      <div class="store-header">
+        <span class="store-badge ${badgeClass}">${storeName.charAt(0)}</span>
+        <div class="store-title">
+          <strong>${storeName}</strong>
+          <span>${data.deals}</span>
+        </div>
+      </div>
+      <div class="metric">
+        <strong>${data.price}</strong>
+        <span>Price</span>
+      </div>
+      <div class="metric">
+        <strong>${data.rating}</strong>
+        <span>Rating</span>
+      </div>
+      <div class="metric">
+        <strong>${data.reviews}</strong>
+        <span>Reviews</span>
+      </div>
+      <div class="link-row">
+        <a href="${data.url}" target="_blank" rel="noreferrer">View on ${storeName}</a>
+      </div>
+    </div>
+  `;
+}
+
+function compareValues(product) {
+  const priceAmazon = Number(product.amazon.price.replace(/[^0-9]/g, ''));
+  const priceFlipkart = Number(product.flipkart.price.replace(/[^0-9]/g, ''));
+
+  let bestPrice = 'Amazon and Flipkart have the same price.';
+  if (priceAmazon < priceFlipkart) {
+    bestPrice = 'Amazon is cheaper for this product.';
+  } else if (priceFlipkart < priceAmazon) {
+    bestPrice = 'Flipkart is cheaper for this product.';
   }
 
-  for (let i = gameState.enemyBullets.length - 1; i >= 0; i--) {
-    const bullet = gameState.enemyBullets[i];
-    bullet.x -= ENEMY_BULLET_SPEED;
-    bullet.element.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
+  const ratingAmazon = Number(product.amazon.rating.split(' ')[0]);
+  const ratingFlipkart = Number(product.flipkart.rating.split(' ')[0]);
 
-    if (bullet.x + bullet.width < 0) {
-      bullet.element.remove();
-      gameState.enemyBullets.splice(i, 1);
-      continue;
-    }
-
-    if (rectsCollide(bullet, player)) {
-      bullet.element.remove();
-      gameState.enemyBullets.splice(i, 1);
-      hitPlayer();
-      continue;
-    }
+  let bestRating = 'Both stores have similar ratings.';
+  if (ratingAmazon > ratingFlipkart) {
+    bestRating = 'Amazon has a slightly higher rating.';
+  } else if (ratingFlipkart > ratingAmazon) {
+    bestRating = 'Flipkart has a slightly higher rating.';
   }
 
-  for (let i = gameState.enemies.length - 1; i >= 0; i--) {
-    const enemy = gameState.enemies[i];
-    enemy.x -= ENEMY_SPEED;
-    enemy.element.style.transform = `translate(${enemy.x}px, ${enemy.y}px)`;
+  return `
+    <div class="summary">
+      <p><strong>${bestPrice}</strong></p>
+      <p><strong>${bestRating}</strong></p>
+    </div>
+  `;
+}
 
-    if (enemy.x + enemy.width < 0) {
-      enemy.element.remove();
-      gameState.enemies.splice(i, 1);
-      continue;
-    }
+function renderResult(product) {
+  const productTitle = `<div class="card result-card"><h2>Comparing ${product.display}</h2><div class="comparison-grid">${buildStoreCard('Amazon', product.amazon, 'badge-amazon')}${buildStoreCard('Flipkart', product.flipkart, 'badge-flipkart')}</div>${compareValues(product)}</div>`;
+  resultsContainer.innerHTML = productTitle;
+}
 
-    if (rectsCollide(player, enemy)) {
-      enemy.element.remove();
-      gameState.enemies.splice(i, 1);
-      hitPlayer();
-      continue;
-    }
+function renderEmpty(query) {
+  resultsContainer.innerHTML = `
+    <div class="card info-card">
+      <h2>No results found</h2>
+      <p>We couldn't find a match for <strong>${query}</strong>. Try a different product such as <strong>iPhone 14</strong>, <strong>Mi Band 7</strong>, <strong>Noise Earbuds</strong>, or <strong>PS5</strong>.</p>
+    </div>
+  `;
+}
 
-    if (Date.now() - enemy.lastShot > 950 && Math.random() < 0.18) {
-      enemy.lastShot = Date.now();
-      createEnemyBullet(enemy.x, enemy.y + enemy.height / 2 - 3);
-    }
-
-    for (let j = gameState.bullets.length - 1; j >= 0; j--) {
-      const bullet = gameState.bullets[j];
-      if (rectsCollide(bullet, enemy)) {
-        bullet.element.remove();
-        enemy.element.remove();
-        gameState.bullets.splice(j, 1);
-        gameState.enemies.splice(i, 1);
-        gameState.score += 10;
-        updateHUD();
-        break;
-      }
-    }
+function handleSearch() {
+  const query = formInput.value.trim();
+  if (!query) {
+    resultsContainer.innerHTML = `
+      <div class="card info-card">
+        <h2>Enter a product name to compare</h2>
+        <p>Try products like <strong>iPhone 14</strong>, <strong>Mi Band 7</strong>, or <strong>PS5</strong>.</p>
+      </div>
+    `;
+    return;
   }
 
-  if (gameState.gameActive) {
-    animationFrame = window.requestAnimationFrame(gameLoop);
+  const product = findProduct(query);
+  if (product) {
+    renderResult(product);
+  } else {
+    renderEmpty(query);
   }
 }
 
-function rectsCollide(a, b) {
-  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-}
-
-function hitPlayer() {
-  gameState.health -= 1;
-  updateHUD();
-  flashPlayer();
-  if (gameState.health <= 0) {
-    endGame();
+searchButton.addEventListener('click', handleSearch);
+formInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    handleSearch();
   }
-}
-
-function flashPlayer() {
-  if (!playerElement) return;
-  playerElement.style.opacity = '0.4';
-  setTimeout(() => {
-    if (playerElement) playerElement.style.opacity = '1';
-  }, 200);
-}
-
-function endGame() {
-  gameState.gameActive = false;
-  if (spawnTimeout) {
-    window.clearTimeout(spawnTimeout);
-  }
-  cancelAnimationFrame(animationFrame);
-  updateHUD();
-  const overlay = document.createElement('div');
-  overlay.className = 'game-over';
-  overlay.innerHTML = `<div class="game-over-card"><h2>Game Over</h2><p>Score: ${gameState.score}</p><p>Press Restart to try again.</p></div>`;
-  gameScreen.appendChild(overlay);
-}
-
-function handleKeyDown(event) {
-  if (!gameState.gameActive) return;
-  if (event.key === 'ArrowLeft') gameState.keys.left = true;
-  if (event.key === 'ArrowRight') gameState.keys.right = true;
-  if (event.key === 'x' || event.key === 'X') gameState.keys.jump = true;
-  if (event.key === 'z' || event.key === 'Z') gameState.keys.shoot = true;
-}
-
-function handleKeyUp(event) {
-  if (event.key === 'ArrowLeft') gameState.keys.left = false;
-  if (event.key === 'ArrowRight') gameState.keys.right = false;
-  if (event.key === 'x' || event.key === 'X') gameState.keys.jump = false;
-  if (event.key === 'z' || event.key === 'Z') gameState.keys.shoot = false;
-}
-
-restartButton.addEventListener('click', () => {
-  const gameOver = gameScreen.querySelector('.game-over');
-  if (gameOver) gameOver.remove();
-  initGame();
 });
 
-window.addEventListener('keydown', handleKeyDown);
-window.addEventListener('keyup', handleKeyUp);
-
-initGame();
+handleSearch();

@@ -3,20 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contra</title>
+  <title>Amazon vs Flipkart Compare</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
-    <section class="game-panel">
-      <h1>Contra</h1>
-      <p class="status">Score: <span id="score">0</span></p>
-      <p class="status">Health: <span id="health">3</span></p>
-      <div id="game-screen" class="game-screen"></div>
-      <div class="controls">
-        <button id="restart">Restart</button>
+    <section class="compare-panel">
+      <h1>Amazon vs Flipkart</h1>
+      <p class="subtitle">Compare price and ratings for popular products across Amazon India and Flipkart.</p>
+
+      <div class="search-panel">
+        <input id="product-input" type="search" placeholder="Enter product name, e.g. iPhone 14" autocomplete="off" />
+        <button id="search-button">Compare</button>
       </div>
-      <p class="instructions">Use arrow keys to move, X to jump, Z to shoot. Survive waves of enemies in this Contra-style shooter.</p>
+
+      <div id="results" class="results">
+        <div class="card info-card">
+          <h2>How it works</h2>
+          <p>Type a product name and press <strong>Compare</strong>. The page shows the latest mock pricing, ratings, and deal highlights from Amazon and Flipkart.</p>
+          <p>This is a static comparison tool for demonstration purposes. You can update the product list in <code>script.js</code> to add more products.</p>
+        </div>
+      </div>
     </section>
   </main>
   <script src="script.js"></script>
