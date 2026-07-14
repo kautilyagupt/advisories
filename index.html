@@ -3,34 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tic Tac Toe</title>
+  <title>Game Sequence</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
     <section class="game-panel">
-      <h1>Tic Tac Toe</h1>
-      <p class="status">Mode: <span id="mode-label">Single Player</span></p>
-      <div class="mode-switch" role="tablist" aria-label="Game mode">
-        <button class="mode-btn active" data-mode="single">Single Player</button>
-        <button class="mode-btn" data-mode="two">Two Player</button>
-      </div>
-      <p class="status">Status: <span id="current-player">Your turn</span></p>
-      <div class="board" id="board">
-        <button class="cell" data-index="0"></button>
-        <button class="cell" data-index="1"></button>
-        <button class="cell" data-index="2"></button>
-        <button class="cell" data-index="3"></button>
-        <button class="cell" data-index="4"></button>
-        <button class="cell" data-index="5"></button>
-        <button class="cell" data-index="6"></button>
-        <button class="cell" data-index="7"></button>
-        <button class="cell" data-index="8"></button>
-      </div>
+      <h1>Game Sequence</h1>
+      <p class="status">Challenge: <span id="game-title">Tic Tac Toe</span></p>
+      <p class="status">Level: <span id="game-index">1</span>/10</p>
+      <p class="status">Status: <span id="game-status">Your turn.</span></p>
+      <div class="board" id="game-board"></div>
       <div class="controls">
-        <button id="restart">Restart Game</button>
+        <button id="restart">Restart</button>
+        <button id="next-game" disabled>Next Game</button>
       </div>
-      <p class="instructions">Play as X against an unbeatable AI. The computer will make the strongest possible move every turn.</p>
+      <p class="instructions" id="game-description">Beat the unbeatable AI in Tic Tac Toe, then move to the next challenge.</p>
     </section>
   </main>
   <script src="script.js"></script>
