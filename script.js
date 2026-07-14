@@ -103,15 +103,13 @@ function playMove(index, player, cell) {
 }
 
 function getWinner(board) {
-  return WINNING_LINES.find(line => {
+  for (const line of WINNING_LINES) {
     const [a, b, c] = line;
-    return board[a] && board[a] === board[b] && board[a] === board[c];
-  })
-    ? board[WINNING_LINES.find(line => {
-        const [a, b, c] = line;
-        return board[a] && board[a] === board[b] && board[a] === board[c];
-      })[0]]
-    : null;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+  return null;
 }
 
 function getWinningLine(board) {
@@ -152,53 +150,88 @@ function playComputerMove() {
   updateStatus();
 }
 
-function getBestMove(board) {
-  const availableMoves = board
+function getAvailableMoves(board) {
+  return board
     .map((value, index) => (value === '' ? index : null))
     .filter(index => index !== null);
+}
+
+function getBestMove(board) {
+  const availableMoves = getAvailableMoves(board);
 
   if (!availableMoves.length) {
     return null;
   }
 
-  const priorityOrder = [4, 0, 2, 6, 8, 1, 3, 5, 7];
-  const scores = availableMoves.map(index => ({
-    index,
-    score: minimax([...board], computerPlayer, index),
-  }));
+  const winningMove = availableMoves.find(index => {
+    const nextBoard = [...board];
+    nextBoard[index] = computerPlayer;
+    return getWinner(nextBoard) === computerPlayer;
+  });
 
-  const bestScore = Math.max(...scores.map(entry => entry.score));
-  const bestMoves = scores.filter(entry => entry.score === bestScore);
-  const orderedMoves = bestMoves.sort((a, b) => priorityOrder.indexOf(a.index) - priorityOrder.indexOf(b.index));
+  if (winningMove !== undefined) {
+    return winningMove;
+  }
 
-  return orderedMoves[0]?.index ?? null;
+  const blockingMove = availableMoves.find(index => {
+    const nextBoard = [...board];
+    nextBoard[index] = humanPlayer;
+    return getWinner(nextBoard) === humanPlayer;
+  });
+
+  if (blockingMove !== undefined) {
+    return blockingMove;
+  }
+
+  if (board[4] === '') {
+    return 4;
+  }
+
+  const moveOrder = [0, 2, 6, 8, 1, 3, 5, 7];
+  let bestScore = -Infinity;
+  let bestMove = null;
+
+  moveOrder.forEach(index => {
+    if (board[index] !== '') {
+      return;
+    }
+
+    const nextBoard = [...board];
+    nextBoard[index] = computerPlayer;
+    const score = minimax(nextBoard, humanPlayer, 1);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMove = index;
+    }
+  });
+
+  return bestMove;
 }
 
-function minimax(board, currentTurn, lastMove) {
+function minimax(board, currentTurn, depth) {
   const winner = getWinner(board);
 
   if (winner === computerPlayer) {
-    return 10;
+    return 10 - depth;
   }
 
   if (winner === humanPlayer) {
-    return -10;
+    return depth - 10;
   }
 
   if (!board.includes('')) {
     return 0;
   }
 
-  const availableMoves = board
-    .map((value, index) => (value === '' ? index : null))
-    .filter(index => index !== null);
+  const availableMoves = getAvailableMoves(board);
 
   if (currentTurn === computerPlayer) {
     let bestScore = -Infinity;
     availableMoves.forEach(index => {
       const nextBoard = [...board];
       nextBoard[index] = computerPlayer;
-      bestScore = Math.max(bestScore, minimax(nextBoard, humanPlayer, index));
+      bestScore = Math.max(bestScore, minimax(nextBoard, humanPlayer, depth + 1));
     });
     return bestScore;
   }
@@ -207,7 +240,7 @@ function minimax(board, currentTurn, lastMove) {
   availableMoves.forEach(index => {
     const nextBoard = [...board];
     nextBoard[index] = humanPlayer;
-    bestScore = Math.min(bestScore, minimax(nextBoard, computerPlayer, index));
+    bestScore = Math.min(bestScore, minimax(nextBoard, computerPlayer, depth + 1));
   });
   return bestScore;
 }
