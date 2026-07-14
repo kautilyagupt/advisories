@@ -49,6 +49,28 @@ h1 {
   color: #cbd5e1;
 }
 
+.mode-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mode-btn {
+  flex: 1;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mode-btn.active {
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  color: #0f172a;
+}
+
 .board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -100,7 +122,8 @@ button#restart:hover {
   box-shadow: 0 14px 30px rgba(56, 189, 248, 0.2);
 }
 
-button#restart:focus-visible {
+button#restart:focus-visible,
+.mode-btn:focus-visible {
   outline: 3px solid rgba(56, 189, 248, 0.4);
   outline-offset: 3px;
 }

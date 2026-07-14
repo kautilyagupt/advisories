@@ -10,7 +10,12 @@
   <main class="app-shell">
     <section class="game-panel">
       <h1>Tic Tac Toe</h1>
-      <p class="status">Current player: <span id="current-player">X</span></p>
+      <p class="status">Mode: <span id="mode-label">Single Player</span></p>
+      <div class="mode-switch" role="tablist" aria-label="Game mode">
+        <button class="mode-btn active" data-mode="single">Single Player</button>
+        <button class="mode-btn" data-mode="two">Two Player</button>
+      </div>
+      <p class="status">Status: <span id="current-player">Your turn</span></p>
       <div class="board" id="board">
         <button class="cell" data-index="0"></button>
         <button class="cell" data-index="1"></button>
@@ -25,7 +30,7 @@
       <div class="controls">
         <button id="restart">Restart Game</button>
       </div>
-      <p class="instructions">Click a square to place your mark. Get three in a row to win.</p>
+      <p class="instructions">Play as X against a perfect AI. The computer makes the strongest possible move.</p>
     </section>
   </main>
   <script src="script.js"></script>
