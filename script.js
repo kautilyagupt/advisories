@@ -73,6 +73,131 @@
   }
 ];
 
+const ADVISORY_SOURCES = [
+  { name: 'NIST', link: 'https://www.nist.gov/news-events/news' },
+  { name: 'OWASP', link: 'https://owasp.org/news/' },
+  { name: 'CISA', link: 'https://www.cisa.gov/news-events/alerts' },
+  { name: 'MITRE', link: 'https://www.mitre.org/news' },
+  { name: 'ENISA', link: 'https://www.enisa.europa.eu/news' },
+  { name: 'US-CERT', link: 'https://www.us-cert.gov/ncas/alerts' },
+  { name: 'NCSC UK', link: 'https://www.ncsc.gov.uk/news' },
+  { name: 'ANSSI', link: 'https://www.ssi.gouv.fr/en/news/' },
+  { name: 'JPCERT/CC', link: 'https://www.jpcert.or.jp/english/news/' },
+  { name: 'AusCERT', link: 'https://www.auscert.org.au/' },
+  { name: 'CERT-IN', link: 'https://www.cert-in.org.in/' },
+  { name: 'CERT Canada', link: 'https://www.cyber.gc.ca/en/' },
+  { name: 'CERT NZ', link: 'https://www.cert.govt.nz/' },
+  { name: 'CERT Australia', link: 'https://www.cyber.gov.au/acsc/view-all-content/advisories' },
+  { name: 'KISA', link: 'https://www.kisa.or.kr/eng/' },
+  { name: 'Brazil CERT', link: 'https://www.cert.br/' },
+  { name: 'CERT France', link: 'https://www.cert.ssi.gouv.fr/' },
+  { name: 'CERT Germany', link: 'https://www.bsi.bund.de/EN/Topics/Cyber-Security/cyber-security_node.html' },
+  { name: 'CERT India', link: 'https://www.cert-in.org.in/' },
+  { name: 'CNSS', link: 'https://www.whitehouse.gov/nsci/' },
+  { name: 'NIST NVD', link: 'https://nvd.nist.gov/' },
+  { name: 'MITRE CVE', link: 'https://cve.mitre.org/' },
+  { name: 'Microsoft Security Response Center', link: 'https://msrc.microsoft.com/' },
+  { name: 'Google Security Blog', link: 'https://security.googleblog.com/' },
+  { name: 'Apple Security Updates', link: 'https://support.apple.com/en-us/HT201222' },
+  { name: 'Cisco Talos', link: 'https://blog.talosintelligence.com/' },
+  { name: 'Palo Alto Networks Unit 42', link: 'https://unit42.paloaltonetworks.com/' },
+  { name: 'Mandiant', link: 'https://www.mandiant.com/resources' },
+  { name: 'CrowdStrike', link: 'https://www.crowdstrike.com/blog/' },
+  { name: 'Kaspersky Securelist', link: 'https://securelist.com/' },
+  { name: 'Trend Micro Zero Day Initiative', link: 'https://www.zerodayinitiative.com/blog/' },
+  { name: 'IBM X-Force', link: 'https://www.ibm.com/security/security-intelligence' },
+  { name: 'Symantec Threat Intelligence', link: 'https://symantec-enterprise-blogs.security.com/' },
+  { name: 'McAfee Labs', link: 'https://www.mcafee.com/enterprise/en-us/threat-center.html' },
+  { name: 'Secureworks', link: 'https://www.secureworks.com/research' },
+  { name: 'Akamai Security Intelligence', link: 'https://www.akamai.com/us/en/resources/security-intelligence-report.jsp' },
+  { name: 'F5 Labs', link: 'https://www.f5.com/labs' },
+  { name: 'Rapid7', link: 'https://www.rapid7.com/research/' },
+  { name: 'Qualys Security Labs', link: 'https://blog.qualys.com/' },
+  { name: 'Tenable', link: 'https://www.tenable.com/blog' },
+  { name: 'Avast Threat Labs', link: 'https://blog.avast.com/' },
+  { name: 'Sophos Labs', link: 'https://news.sophos.com/' },
+  { name: 'Malwarebytes Labs', link: 'https://blog.malwarebytes.com/' },
+  { name: 'Recorded Future', link: 'https://www.recordedfuture.com/blog/' },
+  { name: 'DarkReading', link: 'https://www.darkreading.com/' },
+  { name: 'Threatpost', link: 'https://threatpost.com/' },
+  { name: 'Krebs on Security', link: 'https://krebsonsecurity.com/' },
+  { name: 'CSO Online', link: 'https://www.csoonline.com/' },
+  { name: 'Infosecurity Magazine', link: 'https://www.infosecurity-magazine.com/' },
+  { name: 'SC Magazine', link: 'https://www.scmagazine.com/' },
+  { name: 'The Register Security', link: 'https://www.theregister.com/security/' },
+  { name: 'ZDNet Security', link: 'https://www.zdnet.com/topic/security/' },
+  { name: 'Ars Technica Security', link: 'https://arstechnica.com/security/' },
+  { name: 'Wired Security', link: 'https://www.wired.com/category/security/' },
+  { name: 'TechCrunch Security', link: 'https://techcrunch.com/tag/security/' },
+  { name: 'CyberScoop', link: 'https://www.cyberscoop.com/' },
+  { name: 'Reuters Security', link: 'https://www.reuters.com/world/technology/' },
+  { name: 'Bloomberg Cybersecurity', link: 'https://www.bloomberg.com/technology' },
+  { name: 'Financial Times Cyber', link: 'https://www.ft.com/technology' },
+  { name: 'NATO CCDCOE', link: 'https://www.ccdcoe.org/news/' },
+  { name: 'Europol EC3', link: 'https://www.europol.europa.eu/activities-services/services-support/cybercrime' },
+  { name: 'INTERPOL Cybercrime', link: 'https://www.interpol.int/en/Crimes/Cybercrime' },
+  { name: 'Mozilla Security Blog', link: 'https://blog.mozilla.org/security/' },
+  { name: 'Samsung Security', link: 'https://news.samsung.com/global/tag/security' },
+  { name: 'Oracle Security Alerts', link: 'https://www.oracle.com/security-alerts/' },
+  { name: 'Adobe Security Bulletins', link: 'https://helpx.adobe.com/security.html' },
+  { name: 'SAP Security Notes', link: 'https://support.sap.com/en/solution-thought-leadership/innovation/reports/security-notes.html' },
+  { name: 'VMware Security Advisories', link: 'https://www.vmware.com/security/advisories.html' },
+  { name: 'Juniper PSIRT', link: 'https://www.juniper.net/us/en/products-services/security/psirt/' },
+  { name: 'Red Hat Security', link: 'https://www.redhat.com/en/blog/category/security' },
+  { name: 'SUSE Security', link: 'https://www.suse.com/security/' },
+  { name: 'Debian Security', link: 'https://www.debian.org/security/' },
+  { name: 'Ubuntu Security Notices', link: 'https://ubuntu.com/security/notices' },
+  { name: 'Fedora Magazine Security', link: 'https://fedoramagazine.org/tag/security/' },
+  { name: 'OpenSSF', link: 'https://openssf.org/news/' },
+  { name: 'CERT Poland', link: 'https://www.cert.pl/' },
+  { name: 'CERT Czech Republic', link: 'https://www.nic.cz/en/' },
+  { name: 'CERT Slovakia', link: 'https://www.cert.sk/' },
+  { name: 'CERT Estonia', link: 'https://www.ria.ee/en/cyber-security/' },
+  { name: 'CERT Latvia', link: 'https://cert.lv/' },
+  { name: 'CERT Lithuania', link: 'https://www.cert.lt/' },
+  { name: 'CERT Spain', link: 'https://www.incibe.es/en/' },
+  { name: 'CERT Italy', link: 'https://www.cert-agid.gov.it/' },
+  { name: 'CERT Netherlands', link: 'https://www.ncsc.nl/' },
+  { name: 'CERT Sweden', link: 'https://www.cert.se/' },
+  { name: 'CERT Norway', link: 'https://www.nstdata.no/' },
+  { name: 'CERT Denmark', link: 'https://enisa.europa.eu/topics/csirt-cert-services' },
+  { name: 'Singapore CSA', link: 'https://www.csa.gov.sg/news' },
+  { name: 'HKCERT', link: 'https://www.hkcert.org/' },
+  { name: 'Malaysia MyCERT', link: 'https://www.mycert.org.my/' },
+  { name: 'Thailand ThaiCERT', link: 'https://www.thaicert.or.th/' },
+  { name: 'Indonesia ID-CERT', link: 'https://www.id-cert.or.id/' },
+  { name: 'Philippines CERT', link: 'https://www.cert.gov.ph/' },
+  { name: 'South Africa CERT', link: 'https://www.gov.za/about-government/government-programmes/cybersecurity' },
+  { name: 'Saudi NCA', link: 'https://www.nca.gov.sa/en/' },
+  { name: 'UAE NESA', link: 'https://www.nesa.gov.ae/' },
+  { name: 'Mexico CNS', link: 'https://www.gob.mx/cns' },
+  { name: 'Chile CERT', link: 'https://www.certchile.gob.cl/' },
+  { name: 'Argentina CERT', link: 'https://www.argentina.gob.ar/seguridadinformatica' },
+  { name: 'Colombia CERT', link: 'https://www.cert.gov.co/' },
+  { name: 'Peru CERT', link: 'https://www.certperu.gob.pe/' },
+  { name: 'Israel NCD', link: 'https://www.gov.il/en/departments/national_cyber_directorate' },
+  { name: 'Japan NISC', link: 'https://www.nisc.go.jp/eng/index.html' },
+  { name: 'Korea NIS', link: 'https://www.nis.go.kr/eng' },
+  { name: 'Russia CERT', link: 'https://www.cert.ru/' },
+  { name: 'China CNCERT', link: 'https://www.cert.org.cn/' },
+  { name: 'Pakistan NCC', link: 'https://ncc.gov.pk/' },
+  { name: 'Vietnam VNCERT', link: 'https://www.vncert.gov.vn/' },
+  { name: 'Taiwan TWNIC', link: 'https://www.twnic.tw/' },
+  { name: 'New Zealand NCSC', link: 'https://www.ncsc.govt.nz/' },
+  { name: 'Australia ACSC', link: 'https://www.cyber.gov.au/' },
+  { name: 'Africa Cybersecurity Experts', link: 'https://www.africacybersecurity.org/' },
+  { name: 'Latin America CERT', link: 'https://www.lacnic.net/' },
+  { name: 'GOVCERT.CH', link: 'https://www.govcert.ch/' },
+  { name: 'CERT Belgium', link: 'https://www.cert.be/' },
+  { name: 'CERT Finland', link: 'https://www.cert.fi/' },
+  { name: 'CERT Portugal', link: 'https://www.cert.pt/' },
+  { name: 'CERT Ireland', link: 'https://www.cert.gov.ie/' },
+  { name: 'CERT Greece', link: 'https://www.cert.gr/' },
+  { name: 'CERT Turkey', link: 'https://www.btk.gov.tr/' },
+  { name: 'CERT Romania', link: 'https://www.cert.ro/' },
+  { name: 'CERT Bulgaria', link: 'https://www.cert.bg/' }
+];
+
 const FEED_URLS = [
   'https://feeds.feedburner.com/TheHackersNews',
   'https://www.bleepingcomputer.com/feed/',
@@ -155,10 +280,11 @@ async function loadLiveStories() {
 function renderHeader() {
   document.getElementById('date-badge').textContent = formatDate();
   document.getElementById('story-count').textContent = stories.length;
+  document.getElementById('source-count').textContent = ADVISORY_SOURCES.length;
   document.getElementById('risk-level').textContent = stories.some((story) => story.impact === 'High') ? 'High' : 'Medium';
   document.getElementById('digest-title').textContent = 'Today’s 5-minute summary';
   document.getElementById('digest-summary').textContent =
-    'The biggest themes today are rapid incident response, patch urgency, and stronger reporting rules around the world. This briefing refreshes hourly.';
+    `This briefing refreshes hourly across ${ADVISORY_SOURCES.length} trusted advisory sources worldwide.`;
 }
 
 function renderFilters() {
@@ -215,6 +341,15 @@ function renderNews() {
     .join('');
 }
 
+function renderSources() {
+  const list = document.getElementById('source-list');
+  if (!list) return;
+
+  list.innerHTML = ADVISORY_SOURCES.map((source) => `
+      <a class="source-pill" href="${source.link}" target="_blank" rel="noopener noreferrer">${source.name}</a>
+    `).join('');
+}
+
 function scheduleRefresh() {
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(async () => {
@@ -222,6 +357,7 @@ function scheduleRefresh() {
     renderHeader();
     renderFilters();
     renderNews();
+    renderSources();
   }, 60 * 60 * 1000);
 }
 
@@ -229,10 +365,12 @@ async function init() {
   renderHeader();
   renderFilters();
   renderNews();
+  renderSources();
   await loadLiveStories();
   renderHeader();
   renderFilters();
   renderNews();
+  renderSources();
   scheduleRefresh();
 
   document.getElementById('filters').addEventListener('click', (event) => {
