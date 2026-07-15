@@ -63,18 +63,19 @@
         <div id="filters" class="filter-row"></div>
       </section>
 
-      <section class="source-card">
+      <section id="news-list" class="news-list"></section>
+
+      <section class="source-card bottom-card">
         <div class="digest-header">
           <div>
-            <p class="eyebrow">Advisory network</p>
-            <h2>Trusted global publishers</h2>
+            <p class="eyebrow">Trusted publishers</p>
+            <h2>Global advisory publishers</h2>
           </div>
-          <p class="digest-summary">A curated roster of global advisory sources from NIST, OWASP, CISA, MITRE and many more.</p>
+          <p class="digest-summary">Tap once to expand the full list of trusted publishers from around the world.</p>
         </div>
-        <div id="source-list" class="source-list"></div>
+        <div id="source-list" class="source-list collapsed"></div>
+        <button id="toggle-sources" class="expand-toggle" type="button">Show all trusted publishers</button>
       </section>
-
-      <section id="news-list" class="news-list"></section>
     </main>
 
     <script src="script.js?v=c22533d"></script>

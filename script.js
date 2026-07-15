@@ -224,10 +224,12 @@ function formatDate() {
 
 function formatTime(date) {
   if (!date) return 'Updating…';
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat('en-IN', {
     hour: 'numeric',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Kolkata'
   }).format(date);
 }
 
@@ -312,7 +314,7 @@ function renderHeader() {
   document.getElementById('date-badge').textContent = formatDate();
   document.getElementById('story-count').textContent = stories.length;
   document.getElementById('source-count').textContent = ADVISORY_SOURCES.length;
-  document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime);
+  document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime) + ' IST';
   document.getElementById('risk-level').textContent = stories.some((story) => story.impact === 'High') ? 'High' : 'Medium';
   document.getElementById('digest-title').textContent = 'Today’s 5-minute summary';
   document.getElementById('digest-summary').textContent =
@@ -380,6 +382,16 @@ function renderSources() {
   list.innerHTML = ADVISORY_SOURCES.map((source) => `
       <a class="source-pill" href="${source.link}" target="_blank" rel="noopener noreferrer">${source.name}</a>
     `).join('');
+  list.classList.toggle('collapsed', !sourcesExpanded);
+  const toggle = document.getElementById('toggle-sources');
+  if (toggle) {
+    toggle.textContent = sourcesExpanded ? 'Show less trusted publishers' : 'Show all trusted publishers';
+  }
+}
+
+function toggleSources() {
+  sourcesExpanded = !sourcesExpanded;
+  renderSources();
 }
 
 function scheduleRefresh() {
@@ -413,6 +425,11 @@ async function init() {
     renderFilters();
     renderNews();
   });
+
+  const toggle = document.getElementById('toggle-sources');
+  if (toggle) {
+    toggle.addEventListener('click', toggleSources);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
