@@ -198,10 +198,14 @@ const ADVISORY_SOURCES = [
   { name: 'CERT Bulgaria', link: 'https://www.cert.bg/' }
 ];
 
-const FEED_URLS = [
-  'https://feeds.feedburner.com/TheHackersNews',
-  'https://www.bleepingcomputer.com/feed/',
-  'https://www.securityweek.com/rss.xml'
+const FEED_SOURCES = [
+  { name: 'The Hacker News', url: 'https://feeds.feedburner.com/TheHackersNews' },
+  { name: 'BleepingComputer', url: 'https://www.bleepingcomputer.com/feed/' },
+  { name: 'SecurityWeek', url: 'https://www.securityweek.com/rss.xml' },
+  { name: 'CISA Alerts', url: 'https://www.cisa.gov/sites/default/files/rss/feeds/alerts.xml' },
+  { name: 'Cisco Talos', url: 'https://blog.talosintelligence.com/feed.xml' },
+  { name: 'Dark Reading', url: 'https://www.darkreading.com/rss_simple.asp' },
+  { name: 'Kaspersky', url: 'https://www.kaspersky.com/blog/feed/' }
 ];
 
 let stories = [...FALLBACK_STORIES];
@@ -239,34 +243,39 @@ function createStoryFromFeed(item, index) {
   const category = detectCategory(title);
   const summary = item.description ? item.description.replace(/<[^>]+>/g, '').trim().slice(0, 220) : `A new development in ${category.toLowerCase()} security is drawing attention from defenders worldwide.`;
 
+  const source = item._sourceName || item.source || item.author || 'Live feed';
+  const link = item.link || item.guid || item.url || 'https://thehackernews.com/';
+
   return {
     title,
     category,
     region: detectRegion(title),
-    source: item.author || 'Live feed',
+    source,
     summary,
     whyItMatters: 'This story matters because it can affect organizations, consumers, and security teams in the coming days.',
     impact: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'High' : 'Medium',
     riskClass: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'risk-high' : 'risk-medium',
     takeaway: 'Security teams should review their monitoring, patching, and communication plans promptly.',
-    referenceLink: item.link || 'https://thehackernews.com/'
+    referenceLink: link
   };
 }
 
 async function loadLiveStories() {
   try {
     const results = await Promise.allSettled(
-      FEED_URLS.map((url) =>
-        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then((response) => {
+      FEED_SOURCES.map((feed) =>
+        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`).then((response) => {
           if (!response.ok) throw new Error('Feed request failed');
           return response.json();
-        })
+        }).then((data) => ({ ...data, _sourceName: feed.name }))
       )
     );
 
     const feedItems = results
       .filter((result) => result.status === 'fulfilled' && result.value?.items)
-      .flatMap((result) => result.value.items)
+      .flatMap((result) =>
+        result.value.items.map((item) => ({ ...item, _sourceName: result.value._sourceName }))
+      )
       .slice(0, 8);
 
     if (feedItems.length) {
