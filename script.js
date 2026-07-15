@@ -8,7 +8,8 @@
     whyItMatters: 'The incident highlights how downtime in healthcare can quickly turn into a safety issue, especially when patient records and scheduling systems are locked out.',
     impact: 'High',
     riskClass: 'risk-high',
-    takeaway: 'Hospitals are widening their incident response plans and backup validation work.'
+    takeaway: 'Hospitals are widening their incident response plans and backup validation work.',
+    referenceLink: 'https://www.bleepingcomputer.com/'
   },
   {
     title: 'Google patches a Chrome zero-day already used in targeted attacks',
@@ -19,7 +20,8 @@
     whyItMatters: 'A browser zero-day can become a fast path into corporate systems, especially when employees click links or open documents from trusted-looking sources.',
     impact: 'High',
     riskClass: 'risk-high',
-    takeaway: 'Browser patching is now a top-level priority for IT teams and home users.'
+    takeaway: 'Browser patching is now a top-level priority for IT teams and home users.',
+    referenceLink: 'https://chromereleases.googleblog.com/'
   },
   {
     title: 'EU regulators tighten breach disclosure rules for critical sectors',
@@ -30,7 +32,8 @@
     whyItMatters: 'This change raises the pressure on boards and CISOs to prove they can detect incidents fast and communicate clearly to regulators and customers.',
     impact: 'Medium',
     riskClass: 'risk-medium',
-    takeaway: 'Compliance teams should expect sharper deadlines and more scrutiny around breach handling.'
+    takeaway: 'Compliance teams should expect sharper deadlines and more scrutiny around breach handling.',
+    referenceLink: 'https://ec.europa.eu/'
   },
   {
     title: 'Mobile operator in South Asia confirms data leak affecting millions of users',
@@ -41,7 +44,8 @@
     whyItMatters: 'Leakages like this often fuel phishing and impersonation campaigns, turning a single exposure into a wider wave of social engineering attacks.',
     impact: 'High',
     riskClass: 'risk-high',
-    takeaway: 'Customers should expect SIM swap warnings and more targeted phishing attempts in the next few days.'
+    takeaway: 'Customers should expect SIM swap warnings and more targeted phishing attempts in the next few days.',
+    referenceLink: 'https://www.reuters.com/'
   },
   {
     title: 'Open-source AI package is used in a supply-chain attack chain',
@@ -52,7 +56,8 @@
     whyItMatters: 'Software supply-chain compromises can spread far beyond one organization, making dependency hygiene a core security practice rather than a luxury.',
     impact: 'Medium',
     riskClass: 'risk-medium',
-    takeaway: 'Engineering teams should rotate tokens and review dependency updates more aggressively.'
+    takeaway: 'Engineering teams should rotate tokens and review dependency updates more aggressively.',
+    referenceLink: 'https://github.blog/tag/security/'
   },
   {
     title: 'Critical Linux kernel patch addresses privilege escalation flaw',
@@ -63,7 +68,8 @@
     whyItMatters: 'Kernel-level issues are especially important because they can be abused across multiple services once a host is compromised.',
     impact: 'Medium',
     riskClass: 'risk-medium',
-    takeaway: 'Server operators should prioritize patch windows during the coming week.'
+    takeaway: 'Server operators should prioritize patch windows during the coming week.',
+    referenceLink: 'https://thehackernews.com/'
   }
 ];
 
@@ -75,6 +81,7 @@ const FEED_URLS = [
 
 let stories = [...FALLBACK_STORIES];
 let activeFilter = 'All';
+let refreshTimer = null;
 
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
@@ -116,7 +123,8 @@ function createStoryFromFeed(item, index) {
     whyItMatters: 'This story matters because it can affect organizations, consumers, and security teams in the coming days.',
     impact: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'High' : 'Medium',
     riskClass: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'risk-high' : 'risk-medium',
-    takeaway: 'Security teams should review their monitoring, patching, and communication plans promptly.'
+    takeaway: 'Security teams should review their monitoring, patching, and communication plans promptly.',
+    referenceLink: item.link || 'https://thehackernews.com/'
   };
 }
 
@@ -150,7 +158,7 @@ function renderHeader() {
   document.getElementById('risk-level').textContent = stories.some((story) => story.impact === 'High') ? 'High' : 'Medium';
   document.getElementById('digest-title').textContent = 'Today’s 5-minute summary';
   document.getElementById('digest-summary').textContent =
-    'The biggest themes today are rapid incident response, patch urgency, and stronger reporting rules around the world.';
+    'The biggest themes today are rapid incident response, patch urgency, and stronger reporting rules around the world. This briefing refreshes hourly.';
 }
 
 function renderFilters() {
@@ -200,10 +208,21 @@ function renderNews() {
               <span>${story.takeaway}</span>
             </div>
           </div>
+          <a class="read-more-link" href="${story.referenceLink}" target="_blank" rel="noopener noreferrer">Read the full report ↗</a>
         </article>
       `
     )
     .join('');
+}
+
+function scheduleRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(async () => {
+    await loadLiveStories();
+    renderHeader();
+    renderFilters();
+    renderNews();
+  }, 60 * 60 * 1000);
 }
 
 async function init() {
@@ -214,6 +233,7 @@ async function init() {
   renderHeader();
   renderFilters();
   renderNews();
+  scheduleRefresh();
 
   document.getElementById('filters').addEventListener('click', (event) => {
     const button = event.target.closest('[data-filter]');

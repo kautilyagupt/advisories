@@ -248,6 +248,20 @@ h1 {
   line-height: 1.6;
 }
 
+.read-more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.read-more-link:hover {
+  text-decoration: underline;
+}
+
 .risk-high {
   color: var(--danger);
 }
