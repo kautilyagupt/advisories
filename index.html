@@ -1,31 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Amazon vs Flipkart Compare</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <main class="app-shell">
-    <section class="compare-panel">
-      <h1>Amazon vs Flipkart</h1>
-      <p class="subtitle">Compare price and ratings for popular products across Amazon India and Flipkart.</p>
-
-      <div class="search-panel">
-        <input id="product-input" type="search" placeholder="Enter product name, e.g. iPhone 14" autocomplete="off" />
-        <button id="search-button">Compare</button>
-      </div>
-
-      <div id="results" class="results">
-        <div class="card info-card">
-          <h2>How it works</h2>
-          <p>Type a product name and press <strong>Compare</strong>. The page shows the latest mock pricing, ratings, and deal highlights from Amazon and Flipkart.</p>
-          <p>This is a static comparison tool for demonstration purposes. You can update the product list in <code>script.js</code> to add more products.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A daily cybersecurity briefing that gathers the latest global news and turns it into a five-minute read."
+    />
+    <title>Cyber Pulse Daily</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="background-glow"></div>
+    <main class="app-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Cybersecurity • 5-minute daily read</p>
+          <h1>Cyber Pulse Daily</h1>
+          <p class="subtitle">
+            A concise digest of the most important cyber incidents, vulnerabilities, and policy changes from around the world.
+          </p>
+          <div class="hero-badges">
+            <span id="date-badge" class="pill"></span>
+            <span class="pill">Global brief</span>
+            <span class="pill">Risk snapshot</span>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
-  <script src="script.js"></script>
-</body>
+
+        <aside class="hero-card">
+          <h2>Today at a glance</h2>
+          <div class="metric-grid">
+            <div class="metric">
+              <span>Stories tracked</span>
+              <strong id="story-count">0</strong>
+            </div>
+            <div class="metric">
+              <span>Highest risk</span>
+              <strong id="risk-level">High</strong>
+            </div>
+            <div class="metric">
+              <span>Read time</span>
+              <strong>5 min</strong>
+            </div>
+          </div>
+        </aside>
+      </header>
+
+      <section class="digest-card">
+        <div class="digest-header">
+          <div>
+            <p class="eyebrow">Daily briefing</p>
+            <h2 id="digest-title">Your concise summary for today</h2>
+          </div>
+          <p id="digest-summary" class="digest-summary"></p>
+        </div>
+        <div id="filters" class="filter-row"></div>
+      </section>
+
+      <section id="news-list" class="news-list"></section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
 </html>
