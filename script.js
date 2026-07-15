@@ -211,6 +211,7 @@ const FEED_SOURCES = [
 let stories = [...FALLBACK_STORIES];
 let activeFilter = 'All';
 let refreshTimer = null;
+let lastRefreshTime = null;
 
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
@@ -219,6 +220,15 @@ function formatDate() {
     day: 'numeric',
     year: 'numeric'
   }).format(new Date());
+}
+
+function formatTime(date) {
+  if (!date) return 'Updating…';
+  return new Intl.DateTimeFormat('en', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(date);
 }
 
 function detectCategory(title) {
@@ -271,15 +281,27 @@ async function loadLiveStories() {
       )
     );
 
-    const feedItems = results
-      .filter((result) => result.status === 'fulfilled' && result.value?.items)
-      .flatMap((result) =>
-        result.value.items.map((item) => ({ ...item, _sourceName: result.value._sourceName }))
-      )
-      .slice(0, 8);
+    const sourceGroups = results
+      .filter((result) => result.status === 'fulfilled' && result.value?.items?.length)
+      .map((result) => ({
+        sourceName: result.value._sourceName,
+        items: result.value.items.slice(0, 4).map((item) => ({ ...item, _sourceName: result.value._sourceName }))
+      }));
 
-    if (feedItems.length) {
-      stories = feedItems.map(createStoryFromFeed).slice(0, 6);
+    const mergedItems = [];
+    let round = 0;
+
+    while (mergedItems.length < 6 && sourceGroups.some((group) => group.items[round])) {
+      sourceGroups.forEach((group) => {
+        const item = group.items[round];
+        if (item && mergedItems.length < 6) mergedItems.push(item);
+      });
+      round += 1;
+    }
+
+    if (mergedItems.length) {
+      stories = mergedItems.map(createStoryFromFeed);
+      lastRefreshTime = new Date();
     }
   } catch (error) {
     stories = [...FALLBACK_STORIES];
@@ -290,6 +312,7 @@ function renderHeader() {
   document.getElementById('date-badge').textContent = formatDate();
   document.getElementById('story-count').textContent = stories.length;
   document.getElementById('source-count').textContent = ADVISORY_SOURCES.length;
+  document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime);
   document.getElementById('risk-level').textContent = stories.some((story) => story.impact === 'High') ? 'High' : 'Medium';
   document.getElementById('digest-title').textContent = 'Today’s 5-minute summary';
   document.getElementById('digest-summary').textContent =
