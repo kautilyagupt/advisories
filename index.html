@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119i" />
+    <link rel="stylesheet" href="style.css?v=20261119k" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -157,27 +157,64 @@
       <section id="video-briefing" class="video-card" aria-labelledby="video-title">
         <div class="video-heading">
           <div>
-            <p class="eyebrow">Audio + visual brief</p>
-            <h2 id="video-title">Listen to the latest intelligence</h2>
+            <p class="eyebrow">Visual intelligence briefing</p>
+            <h2 id="video-title">Watch the latest intelligence</h2>
           </div>
-          <span id="video-duration" class="status-badge">About 5 minutes</span>
+          <span id="video-duration" class="status-badge">About 1 minute</span>
         </div>
 
-        <div id="video-stage" class="video-stage" role="region" aria-label="Animated cybersecurity news briefing">
+        <div id="video-stage" class="video-stage" role="region" tabindex="0" aria-label="Animated cybersecurity news briefing. Use left and right arrows to change stories, or space to play.">
           <div class="video-grid" aria-hidden="true"></div>
           <div class="video-scanline" aria-hidden="true"></div>
+          <div class="video-network" aria-hidden="true">
+            <span class="network-core"></span>
+            <span class="network-node node-a"></span>
+            <span class="network-node node-b"></span>
+            <span class="network-node node-c"></span>
+            <span class="network-line line-a"></span>
+            <span class="network-line line-b"></span>
+            <span class="network-line line-c"></span>
+          </div>
           <div class="video-slide">
             <div class="video-slide-meta">
               <span id="video-number">Story 1 of 1</span>
               <span id="video-category" class="category-pill">Cybersecurity</span>
             </div>
             <h3 id="video-story-title">Preparing today’s briefing…</h3>
-            <p id="video-caption">The latest advisory stories will appear here with synchronized narration.</p>
+            <p id="video-caption">Each story becomes a clear visual explainer with the key risk and why it matters.</p>
             <div id="video-action" class="video-action"><strong>Recommended action</strong><span>Review the briefing.</span></div>
           </div>
+          <aside class="video-visual" aria-label="Story risk details">
+            <div class="cartoon-scene" aria-hidden="true">
+              <div class="cartoon-cloud cloud-a"></div>
+              <div class="cartoon-cloud cloud-b"></div>
+              <div class="cartoon-newsboard">
+                <span id="cartoon-badge">CYBER NEWS</span>
+                <strong id="cartoon-impact">HIGH</strong>
+              </div>
+              <div class="cartoon-speech"><span id="cartoon-kicker">WHAT HAPPENED</span><strong id="cartoon-message">The story is being prepared.</strong></div>
+              <div class="cartoon-host">
+                <span class="host-ear"></span>
+                <span class="host-head"><i class="host-eye"></i><i class="host-mouth"></i></span>
+                <span class="host-neck"></span>
+                <span class="host-body"><i></i></span>
+                <span class="host-arm"></span>
+              </div>
+              <div class="cartoon-desk"></div>
+            </div>
+            <div class="story-chapters" aria-label="Storytelling chapters">
+              <button class="active" type="button" data-chapter="0">1 <b>What happened</b></button>
+              <button type="button" data-chapter="1">2 <b>Why it matters</b></button>
+              <button type="button" data-chapter="2">3 <b>What to do</b></button>
+            </div>
+            <dl>
+              <div><dt>Region</dt><dd id="video-region">Global</dd></div>
+              <div><dt>Source</dt><dd id="video-source">Advisory feed</dd></div>
+            </dl>
+          </aside>
           <div class="video-controls-overlay">
             <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play briefing</button>
-            <button id="video-mute" class="video-icon-button" type="button" aria-label="Mute narration" aria-pressed="false">🔊</button>
+            <button id="video-mute" class="video-icon-button voice-toggle" type="button" aria-label="Enable optional narration" aria-pressed="false">🔇 Voice off</button>
           </div>
         </div>
 
@@ -302,6 +339,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119i"></script>
+    <script src="script.js?v=20261119k"></script>
   </body>
 </html>

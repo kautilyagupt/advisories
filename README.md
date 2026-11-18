@@ -18,7 +18,7 @@ A professional, privacy-friendly cybersecurity intelligence briefing for GitHub 
 - Browser smoke-test suite under `tests/`
 - Story-aware adaptive knowledge checks with explanations and topic review
 - Local best-score, attempt count, and weak-topic progress tracking
-- Animated audio-visual briefing that stays synchronized with feed and search filters
+- Cartoon-style news explainer with an animated presenter, clickable story chapters, and optional narration
 
 ## How to view it
 Open [index.html](index.html) in a browser.

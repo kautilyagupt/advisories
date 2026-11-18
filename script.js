@@ -299,8 +299,12 @@ let videoBrief = {
   stories: [],
   index: 0,
   playing: false,
-  muted: false,
-  timer: null
+  muted: true,
+  timer: null,
+  chapterTimer: null,
+  chapterIndex: 0,
+  chapters: [],
+  currentStory: null
 };
 
 function formatDate() {
@@ -1005,8 +1009,9 @@ async function init() {
 
   document.getElementById('video-mute')?.addEventListener('click', (event) => {
     videoBrief.muted = !videoBrief.muted;
-    event.currentTarget.setAttribute('aria-pressed', String(videoBrief.muted));
-    event.currentTarget.textContent = videoBrief.muted ? '🔇' : '🔊';
+    event.currentTarget.setAttribute('aria-pressed', String(!videoBrief.muted));
+    event.currentTarget.setAttribute('aria-label', videoBrief.muted ? 'Enable optional narration' : 'Disable optional narration');
+    event.currentTarget.textContent = videoBrief.muted ? '🔇 Voice off' : '🔊 Voice on';
     if (videoBrief.muted) stopNarration();
     else if (videoBrief.playing) renderVideoSlide();
   });
@@ -1014,10 +1019,39 @@ async function init() {
   document.getElementById('video-prev')?.addEventListener('click', () => {
     videoBrief.index = Math.max(0, videoBrief.index - 1);
     renderVideoSlide();
+    if (videoBrief.playing) scheduleVideoAdvance();
   });
 
   document.getElementById('video-next')?.addEventListener('click', () => {
     nextVideoSlide(false);
+  });
+
+  document.querySelector('.story-chapters')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-chapter]');
+    if (!button || !videoBrief.chapters.length) return;
+    showCartoonChapter(Number(button.dataset.chapter));
+    if (videoBrief.playing) {
+      if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
+      videoBrief.chapterTimer = setInterval(() => {
+        if (!videoBrief.playing) return;
+        showCartoonChapter((videoBrief.chapterIndex + 1) % videoBrief.chapters.length);
+      }, 4000);
+    }
+  });
+
+  document.getElementById('video-stage')?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      videoBrief.index = Math.max(0, videoBrief.index - 1);
+      renderVideoSlide();
+      if (videoBrief.playing) scheduleVideoAdvance();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      nextVideoSlide(false);
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      document.getElementById('video-play')?.click();
+    }
   });
 
   const difficultySelect = document.getElementById('quiz-difficulty');
@@ -1266,6 +1300,38 @@ function speakBriefing(text) {
   window.speechSynthesis.speak(utterance);
 }
 
+function showCartoonChapter(index) {
+  const chapter = videoBrief.chapters[index];
+  const speech = document.querySelector('.cartoon-speech');
+  if (!chapter || !speech) return;
+  videoBrief.chapterIndex = index;
+  speech.classList.add('chapter-change');
+  document.querySelectorAll('.story-chapters button').forEach((item, itemIndex) => {
+    item.classList.toggle('active', itemIndex === index);
+  });
+  setTimeout(() => {
+    document.getElementById('cartoon-kicker').textContent = chapter.kicker;
+    document.getElementById('cartoon-message').textContent = chapter.text;
+    speech.classList.remove('chapter-change');
+  }, 180);
+}
+
+function renderCartoonStory(story) {
+  if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
+  videoBrief.currentStory = story;
+  videoBrief.chapters = [
+    { kicker: 'WHAT HAPPENED', text: story.summary || story.title },
+    { kicker: 'WHY IT MATTERS', text: story.whyItMatters || story.summary },
+    { kicker: 'WHAT TO DO', text: story.takeaway || 'Review the primary advisory and apply the recommended controls.' }
+  ];
+  showCartoonChapter(0);
+  if (!videoBrief.playing) return;
+  videoBrief.chapterTimer = setInterval(() => {
+    if (!videoBrief.playing) return;
+    showCartoonChapter((videoBrief.chapterIndex + 1) % videoBrief.chapters.length);
+  }, 4000);
+}
+
 function renderVideoSlide() {
   const storiesToShow = videoBrief.stories;
   if (!storiesToShow.length) {
@@ -1282,16 +1348,25 @@ function renderVideoSlide() {
   document.getElementById('video-number').textContent = `Story ${videoBrief.index + 1} of ${storiesToShow.length}`;
   document.getElementById('video-category').textContent = story.category;
   document.getElementById('video-story-title').textContent = story.title;
-  document.getElementById('video-caption').textContent = story.summary;
+  document.getElementById('video-caption').textContent = story.whyItMatters || story.summary;
   document.getElementById('video-action').innerHTML = `<strong>Recommended action</strong><span>${escapeHtml(story.takeaway)}</span>`;
+  document.getElementById('video-region').textContent = story.region || 'Global';
+  document.getElementById('video-source').textContent = story.source || 'Advisory feed';
+  document.getElementById('cartoon-badge').textContent = story.category || 'CYBER NEWS';
+  document.getElementById('cartoon-impact').textContent = (story.impact || 'MEDIUM').toUpperCase();
+  document.getElementById('cartoon-kicker').textContent = 'WHAT HAPPENED';
+  document.getElementById('cartoon-message').textContent = story.summary || story.title;
+  stage.dataset.impact = (story.impact || 'Medium').toLowerCase();
   document.getElementById('video-slide-counter').textContent = `${videoBrief.index + 1} / ${storiesToShow.length}`;
   document.getElementById('video-progress').style.width = `${((videoBrief.index + 1) / storiesToShow.length) * 100}%`;
+  renderCartoonStory(story);
   if (videoBrief.playing) speakBriefing(`${story.category}. ${story.title}. ${story.summary}. Recommended action: ${story.takeaway}`);
 }
 
 function stopVideoBrief() {
   videoBrief.playing = false;
   if (videoBrief.timer) clearTimeout(videoBrief.timer);
+  if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
   stopNarration();
   document.getElementById('video-stage')?.classList.remove('is-playing');
   document.getElementById('video-play').textContent = '▶ Play briefing';
@@ -1300,7 +1375,7 @@ function stopVideoBrief() {
 function scheduleVideoAdvance() {
   if (videoBrief.timer) clearTimeout(videoBrief.timer);
   if (!videoBrief.playing) return;
-  videoBrief.timer = setTimeout(() => nextVideoSlide(true), 16000);
+  videoBrief.timer = setTimeout(() => nextVideoSlide(true), 12000);
 }
 
 function nextVideoSlide(autoAdvance = false) {
@@ -1311,7 +1386,7 @@ function nextVideoSlide(autoAdvance = false) {
     stopVideoBrief();
     document.getElementById('video-play').textContent = '↻ Replay briefing';
   }
-  if (videoBrief.playing && !autoAdvance) scheduleVideoAdvance();
+  if (videoBrief.playing) scheduleVideoAdvance();
 }
 
 function startVideoBrief() {
