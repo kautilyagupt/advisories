@@ -12,11 +12,24 @@
     <meta property="og:description" content="A concise five-minute global cybersecurity briefing." />
     <meta property="og:type" content="website" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119" />
+    <link rel="stylesheet" href="style.css?v=20261119b" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="background-glow"></div>
-    <main class="app-shell">
+    <main id="main-content" class="app-shell">
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a class="brand" href="#" aria-label="Cyber Pulse Daily home">
+          <span class="brand-mark" aria-hidden="true">CP</span>
+          <span>Cyber Pulse <b>Daily</b></span>
+        </a>
+        <div class="nav-actions">
+          <a href="#briefing">Briefing</a>
+          <a href="#threat-map">Threat landscape</a>
+          <a href="#sources">Sources</a>
+        </div>
+      </nav>
+
       <header class="hero">
         <div class="hero-copy">
           <p class="eyebrow">Cybersecurity • 5-minute daily read</p>
@@ -56,7 +69,33 @@
         </aside>
       </header>
 
-      <section class="digest-card">
+      <section id="threat-map" class="dashboard-grid" aria-label="Threat landscape overview">
+        <article class="dashboard-card trend-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Threat landscape</p>
+              <h2>Activity snapshot</h2>
+            </div>
+            <span class="status-badge"><span></span> Live view</span>
+          </div>
+          <div class="bar-chart" id="category-chart" aria-label="Stories by threat category"></div>
+        </article>
+
+        <article class="dashboard-card region-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Global reach</p>
+              <h2>Regional coverage</h2>
+            </div>
+          </div>
+          <div id="region-chart" class="donut-chart" role="img" aria-label="Regional story distribution">
+            <div class="donut-center"><strong id="region-total">0</strong><span>stories</span></div>
+          </div>
+          <div id="region-legend" class="region-legend"></div>
+        </article>
+      </section>
+
+      <section id="briefing" class="digest-card">
         <div class="digest-header">
           <div>
             <p class="eyebrow">Daily briefing</p>
@@ -64,12 +103,29 @@
           </div>
           <p id="digest-summary" class="digest-summary"></p>
         </div>
-        <div id="filters" class="filter-row"></div>
+        <div class="briefing-tools">
+          <div id="filters" class="filter-row" aria-label="Filter stories by category"></div>
+          <div class="tool-actions">
+            <label class="search-box">
+              <span class="sr-only">Search stories</span>
+              <input id="story-search" type="search" placeholder="Search intelligence…" autocomplete="off" />
+            </label>
+            <label class="sort-box">
+              <span class="sr-only">Sort stories</span>
+              <select id="story-sort">
+                <option value="featured">Featured</option>
+                <option value="high-risk">Highest risk</option>
+                <option value="title">Title A–Z</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p id="result-count" class="result-count" aria-live="polite"></p>
       </section>
 
-      <section id="news-list" class="news-list"></section>
+      <section id="news-list" class="news-list" aria-label="Cybersecurity stories"></section>
 
-      <section class="source-card bottom-card">
+      <section id="sources" class="source-card bottom-card">
         <div class="digest-header">
           <div>
             <p class="eyebrow">Trusted publishers</p>
@@ -80,8 +136,16 @@
         <div id="source-list" class="source-list collapsed"></div>
         <button id="toggle-sources" class="expand-toggle" type="button" aria-expanded="false" aria-controls="source-list">Show all trusted publishers</button>
       </section>
+
+      <footer class="site-footer">
+        <div>
+          <strong>Cyber Pulse Daily</strong>
+          <p>Open-source intelligence digest for security leaders and professionals.</p>
+        </div>
+        <p class="footer-note">Content is aggregated for awareness and should be verified against primary advisories.</p>
+      </footer>
     </main>
 
-    <script src="script.js?v=20261119"></script>
+    <script src="script.js?v=20261119b"></script>
   </body>
 </html>

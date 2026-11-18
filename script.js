@@ -70,6 +70,42 @@
     riskClass: 'risk-medium',
     takeaway: 'Server operators should prioritize patch windows during the coming week.',
     referenceLink: 'https://thehackernews.com/'
+  },
+  {
+    title: 'Agentic AI tools expand the attack surface for enterprise workflows',
+    category: 'Agent & AI Threats',
+    region: 'Global',
+    source: 'MITRE ATLAS',
+    summary: 'Security researchers are examining prompt injection, tool misuse, and sensitive data exposure across autonomous AI agents connected to enterprise systems.',
+    whyItMatters: 'AI agents can turn an isolated model flaw into real-world actions across email, repositories, cloud infrastructure, and customer systems.',
+    impact: 'High',
+    riskClass: 'risk-high',
+    takeaway: 'Apply least privilege, human approval gates, and continuous monitoring to AI agent tool access.',
+    referenceLink: 'https://atlas.mitre.org/'
+  },
+  {
+    title: 'Identity providers face rising session-token theft campaigns',
+    category: 'Identity & Phishing',
+    region: 'Global',
+    source: 'CISA',
+    summary: 'Adversaries are bypassing traditional passwords by stealing authenticated sessions and abusing phishing-resistant identity workflows.',
+    whyItMatters: 'Compromised session tokens can grant immediate access without triggering repeated sign-in controls.',
+    impact: 'High',
+    riskClass: 'risk-high',
+    takeaway: 'Prioritize phishing-resistant MFA, short-lived sessions, and anomalous sign-in detection.',
+    referenceLink: 'https://www.cisa.gov/topics/identity-and-access-management'
+  },
+  {
+    title: 'Cloud misconfiguration exposes production secrets at scale',
+    category: 'Cloud Security',
+    region: 'North America',
+    source: 'OWASP',
+    summary: 'Exposed management interfaces and overly broad service permissions continue to create pathways to cloud workloads and secrets.',
+    whyItMatters: 'One configuration weakness can provide attackers with broad lateral movement across applications and data stores.',
+    impact: 'Medium',
+    riskClass: 'risk-medium',
+    takeaway: 'Audit permissions continuously and enforce secrets rotation with infrastructure policy checks.',
+    referenceLink: 'https://owasp.org/www-project-cloud-native-application-security-top-10/'
   }
 ];
 
@@ -210,6 +246,8 @@ const FEED_SOURCES = [
 
 let stories = [...FALLBACK_STORIES];
 let activeFilter = 'All';
+let searchQuery = '';
+let sortMode = 'featured';
 let refreshTimer = null;
 let lastRefreshTime = null;
 let sourcesExpanded = false;
@@ -236,11 +274,17 @@ function formatTime(date) {
 
 function detectCategory(title) {
   const text = title.toLowerCase();
-  if (/ransom|encrypt|malware|attack/i.test(text)) return 'Ransomware';
-  if (/breach|leak|data/i.test(text)) return 'Data Breach';
-  if (/policy|regulat|compliance|eu|law/i.test(text)) return 'Policy';
+  if (/agentic|agent ai|llm|prompt injection|model abuse|ai threat/i.test(text)) return 'Agent & AI Threats';
+  if (/ransom|encrypt|malware/i.test(text)) return 'Ransomware';
+  if (/breach|leak|exposed|stolen data/i.test(text)) return 'Data Breach';
+  if (/phish|social engineer|identity|credential|session/i.test(text)) return 'Identity & Phishing';
+  if (/cloud|kubernetes|container|saas/i.test(text)) return 'Cloud Security';
+  if (/iot|ot|industrial|scada|critical infrastructure/i.test(text)) return 'OT & Critical Infrastructure';
+  if (/policy|regulat|compliance|law|sanction/i.test(text)) return 'Policy';
   if (/supply|dependency|open-source|package|chain/i.test(text)) return 'Supply Chain';
-  return 'Vulnerability';
+  if (/nation state|espionage|apt|cyberwar|geopolit/i.test(text)) return 'Nation-State';
+  if (/attack|exploit|vulnerab|zero-day|patch/i.test(text)) return 'Vulnerability';
+  return 'Threat Intelligence';
 }
 
 function detectRegion(title) {
@@ -360,12 +404,35 @@ function renderFilters() {
 }
 
 function getVisibleStories() {
-  return activeFilter === 'All' ? stories : stories.filter((story) => story.category === activeFilter);
+  let visible = activeFilter === 'All'
+    ? [...stories]
+    : stories.filter((story) => story.category === activeFilter);
+
+  if (searchQuery) {
+    visible = visible.filter((story) =>
+      `${story.title} ${story.summary} ${story.category} ${story.region} ${story.source}`
+        .toLowerCase()
+        .includes(searchQuery)
+    );
+  }
+
+  if (sortMode === 'high-risk') {
+    const rank = { High: 0, Medium: 1, Low: 2 };
+    visible.sort((a, b) => (rank[a.impact] ?? 3) - (rank[b.impact] ?? 3));
+  } else if (sortMode === 'title') {
+    visible.sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  return visible;
 }
 
 function renderNews() {
   const list = document.getElementById('news-list');
   const visibleStories = getVisibleStories();
+  const resultCount = document.getElementById('result-count');
+  if (resultCount) {
+    resultCount.textContent = `${visibleStories.length} ${visibleStories.length === 1 ? 'story' : 'stories'} shown`;
+  }
 
   if (!visibleStories.length) {
     list.innerHTML = '<article class="news-card"><h3>No stories match this filter yet.</h3></article>';
@@ -400,6 +467,46 @@ function renderNews() {
     .join('');
 }
 
+function renderCharts() {
+  const categoryCounts = stories.reduce((counts, story) => {
+    counts[story.category] = (counts[story.category] || 0) + 1;
+    return counts;
+  }, {});
+
+  const sortedCategories = Object.entries(categoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+  const maxCount = Math.max(...sortedCategories.map(([, count]) => count), 1);
+  document.getElementById('category-chart').innerHTML = sortedCategories.map(([category, count]) => `
+    <div class="chart-row">
+      <span class="chart-label">${escapeHtml(category)}</span>
+      <div class="chart-track"><span style="width:${Math.max(12, (count / maxCount) * 100)}%"></span></div>
+      <strong>${count}</strong>
+    </div>
+  `).join('');
+
+  const regionCounts = stories.reduce((counts, story) => {
+    counts[story.region] = (counts[story.region] || 0) + 1;
+    return counts;
+  }, {});
+  const regionEntries = Object.entries(regionCounts).slice(0, 5);
+  const total = regionEntries.reduce((sum, [, count]) => sum + count, 0);
+  const colors = ['#38bdf8', '#818cf8', '#34d399', '#f59e0b', '#fb7185'];
+  let cursor = 0;
+  const stops = regionEntries.map(([, count], index) => {
+    const start = cursor;
+    cursor += (count / total) * 100;
+    return `${colors[index]} ${start}% ${cursor}%`;
+  });
+
+  const donut = document.getElementById('region-chart');
+  donut.style.setProperty('--donut', stops.length ? `conic-gradient(${stops.join(', ')})` : 'conic-gradient(#334155 0 100%)');
+  document.getElementById('region-total').textContent = String(total);
+  document.getElementById('region-legend').innerHTML = regionEntries.map(([region, count], index) => `
+    <span><i style="background:${colors[index]}"></i>${escapeHtml(region)} <b>${count}</b></span>
+  `).join('');
+}
+
 function renderSources() {
   const list = document.getElementById('source-list');
   if (!list) return;
@@ -429,6 +536,7 @@ function scheduleRefresh() {
     renderFilters();
     renderNews();
     renderSources();
+    renderCharts();
   }, 60 * 60 * 1000);
 }
 
@@ -437,11 +545,13 @@ async function init() {
   renderFilters();
   renderNews();
   renderSources();
+  renderCharts();
   await loadLiveStories();
   renderHeader();
   renderFilters();
   renderNews();
   renderSources();
+  renderCharts();
   scheduleRefresh();
 
   document.getElementById('filters').addEventListener('click', (event) => {
@@ -452,6 +562,22 @@ async function init() {
     renderFilters();
     renderNews();
   });
+
+  const search = document.getElementById('story-search');
+  if (search) {
+    search.addEventListener('input', (event) => {
+      searchQuery = event.target.value.trim().toLowerCase();
+      renderNews();
+    });
+  }
+
+  const sort = document.getElementById('story-sort');
+  if (sort) {
+    sort.addEventListener('change', (event) => {
+      sortMode = event.target.value;
+      renderNews();
+    });
+  }
 
   const toggle = document.getElementById('toggle-sources');
   if (toggle) {
