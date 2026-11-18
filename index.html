@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A daily cybersecurity briefing that gathers the latest global news and turns it into a five-minute read."
+      content="A daily cybersecurity briefing covering major incidents, vulnerabilities, and policy changes from trusted global sources."
     />
+    <meta name="theme-color" content="#030712" />
+    <meta property="og:title" content="Cyber Pulse Daily" />
+    <meta property="og:description" content="A concise five-minute global cybersecurity briefing." />
+    <meta property="og:type" content="website" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=c22533d" />
+    <link rel="stylesheet" href="style.css?v=20261119" />
   </head>
   <body>
     <div class="background-glow"></div>
@@ -25,7 +29,7 @@
             <span class="pill">Global brief</span>
             <span class="pill">Risk snapshot</span>
             <span class="pill">Updates hourly</span>
-            <span id="last-refresh" class="pill">Refreshing…</span>
+            <span id="last-refresh" class="pill" role="status" aria-live="polite">Refreshing…</span>
           </div>
         </div>
 
@@ -74,10 +78,10 @@
           <p class="digest-summary">Tap once to expand the full list of trusted publishers from around the world.</p>
         </div>
         <div id="source-list" class="source-list collapsed"></div>
-        <button id="toggle-sources" class="expand-toggle" type="button">Show all trusted publishers</button>
+        <button id="toggle-sources" class="expand-toggle" type="button" aria-expanded="false" aria-controls="source-list">Show all trusted publishers</button>
       </section>
     </main>
 
-    <script src="script.js?v=c22533d"></script>
+    <script src="script.js?v=20261119"></script>
   </body>
 </html>

@@ -212,6 +212,7 @@ let stories = [...FALLBACK_STORIES];
 let activeFilter = 'All';
 let refreshTimer = null;
 let lastRefreshTime = null;
+let sourcesExpanded = false;
 
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
@@ -273,14 +274,25 @@ function createStoryFromFeed(item, index) {
 }
 
 async function loadLiveStories() {
+  document.getElementById('last-refresh').textContent = 'Updating…';
+
   try {
     const results = await Promise.allSettled(
-      FEED_SOURCES.map((feed) =>
-        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`).then((response) => {
+      FEED_SOURCES.map(async (feed) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+          const response = await fetch(
+            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`,
+            { signal: controller.signal }
+          );
           if (!response.ok) throw new Error('Feed request failed');
-          return response.json();
-        }).then((data) => ({ ...data, _sourceName: feed.name }))
-      )
+          const data = await response.json();
+          return { ...data, _sourceName: feed.name };
+        } finally {
+          clearTimeout(timeout);
+        }
+      })
     );
 
     const sourceGroups = results
@@ -292,21 +304,36 @@ async function loadLiveStories() {
 
     const mergedItems = [];
     let round = 0;
-
-    while (mergedItems.length < 6 && sourceGroups.some((group) => group.items[round])) {
-      sourceGroups.forEach((group) => {
+    while (mergedItems.length < 12 && sourceGroups.some((group) => group.items[round])) {
+      for (const group of sourceGroups) {
         const item = group.items[round];
-        if (item && mergedItems.length < 6) mergedItems.push(item);
-      });
+        if (item && mergedItems.length < 12) mergedItems.push(item);
+      }
       round += 1;
     }
 
-    if (mergedItems.length) {
-      stories = mergedItems.map(createStoryFromFeed);
+    const uniqueItems = [];
+    const seenTitles = new Set();
+    for (const item of mergedItems) {
+      const normalizedTitle = (item.title || '').trim().toLowerCase();
+      if (normalizedTitle && !seenTitles.has(normalizedTitle)) {
+        seenTitles.add(normalizedTitle);
+        uniqueItems.push(item);
+      }
+      if (uniqueItems.length === 6) break;
+    }
+
+    if (uniqueItems.length) {
+      stories = uniqueItems.map(createStoryFromFeed);
       lastRefreshTime = new Date();
+      document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime) + ' IST • Live';
+    } else {
+      document.getElementById('last-refresh').textContent = 'Fallback briefing';
     }
   } catch (error) {
     stories = [...FALLBACK_STORIES];
+    lastRefreshTime = new Date();
+    document.getElementById('last-refresh').textContent = 'Fallback briefing';
   }
 }
 
@@ -327,7 +354,7 @@ function renderFilters() {
   filterContainer.innerHTML = filters
     .map((filter) => {
       const isActive = filter === activeFilter;
-      return `<button class="filter-chip ${isActive ? 'active' : ''}" data-filter="${filter}">${filter}</button>`;
+      return `<button class="filter-chip ${isActive ? 'active' : ''}" data-filter="${escapeHtml(filter)}" aria-pressed="${isActive}">${escapeHtml(filter)}</button>`;
     })
     .join('');
 }
@@ -346,32 +373,30 @@ function renderNews() {
   }
 
   list.innerHTML = visibleStories
-    .map(
-      (story) => `
+    .map((story) => `
         <article class="news-card">
           <div class="news-top">
             <div class="news-meta">
-              <span class="category-pill">${story.category}</span>
-              <span class="source">${story.region} • ${story.source}</span>
+              <span class="category-pill">${escapeHtml(story.category)}</span>
+              <span class="source">${escapeHtml(story.region)} • ${escapeHtml(story.source)}</span>
             </div>
-            <span class="${story.riskClass}">${story.impact} impact</span>
+            <span class="${escapeHtml(story.riskClass)}">${escapeHtml(story.impact)} impact</span>
           </div>
-          <h3>${story.title}</h3>
-          <p class="summary-text">${story.summary}</p>
+          <h3>${escapeHtml(story.title)}</h3>
+          <p class="summary-text">${escapeHtml(story.summary)}</p>
           <div class="story-grid">
             <div class="story-box">
               <strong>Why it matters</strong>
-              <span>${story.whyItMatters}</span>
+              <span>${escapeHtml(story.whyItMatters)}</span>
             </div>
             <div class="story-box">
               <strong>What to watch</strong>
-              <span>${story.takeaway}</span>
+              <span>${escapeHtml(story.takeaway)}</span>
             </div>
           </div>
-          <a class="read-more-link" href="${story.referenceLink}" target="_blank" rel="noopener noreferrer">Read the full report ↗</a>
+          <a class="read-more-link" href="${safeLink(story.referenceLink)}" target="_blank" rel="noopener noreferrer">Read the full report ↗</a>
         </article>
-      `
-    )
+      `)
     .join('');
 }
 
@@ -380,12 +405,14 @@ function renderSources() {
   if (!list) return;
 
   list.innerHTML = ADVISORY_SOURCES.map((source) => `
-      <a class="source-pill" href="${source.link}" target="_blank" rel="noopener noreferrer">${source.name}</a>
+      <a class="source-pill" href="${safeLink(source.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.name)}</a>
     `).join('');
   list.classList.toggle('collapsed', !sourcesExpanded);
+  list.setAttribute('aria-expanded', String(sourcesExpanded));
   const toggle = document.getElementById('toggle-sources');
   if (toggle) {
     toggle.textContent = sourcesExpanded ? 'Show less trusted publishers' : 'Show all trusted publishers';
+    toggle.setAttribute('aria-expanded', String(sourcesExpanded));
   }
 }
 
@@ -433,3 +460,21 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function safeLink(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : 'https://thehackernews.com/';
+  } catch {
+    return 'https://thehackernews.com/';
+  }
+}

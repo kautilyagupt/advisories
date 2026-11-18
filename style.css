@@ -172,6 +172,10 @@ h1 {
 
 .source-card {
   padding: 24px 26px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 18px 60px rgba(2, 8, 23, 0.35);
 }
 
 .source-list {
@@ -279,7 +283,7 @@ h1 {
 
 .story-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -351,29 +355,30 @@ h1 {
   .story-grid {
     grid-template-columns: 1fr;
   }
-}
-  color: #0f172a;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.2s ease;
+
+  .source-card,
+  .hero-card {
+    padding: 18px;
+  }
+
+  .news-top {
+    align-items: flex-start;
+  }
 }
 
-button#restart:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(56, 189, 248, 0.2);
-}
-
-button#restart:focus-visible {
-  outline: 3px solid rgba(56, 189, 248, 0.4);
+.filter-chip:focus-visible,
+.expand-toggle:focus-visible,
+.source-pill:focus-visible,
+.read-more-link:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.45);
   outline-offset: 3px;
 }
 
-@media (max-width: 640px) {
-  .game-panel {
-    padding: 20px;
-  }
-
-  button#restart {
-    width: 100%;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
   }
 }
