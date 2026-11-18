@@ -261,6 +261,22 @@ let savedStoryIds = (() => {
     return new Set();
   }
 })();
+let watchlist = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cyber-pulse-watchlist') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+})();
+let priorityProfile = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cyber-pulse-priorities') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+})();
 
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
@@ -280,6 +296,13 @@ function formatTime(date) {
     hour12: false,
     timeZone: 'Asia/Kolkata'
   }).format(date);
+}
+
+function formatShortDate(value) {
+  if (!value) return 'Latest update';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Latest update';
+  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
 }
 
 function detectCategory(title) {
@@ -305,26 +328,53 @@ function detectRegion(title) {
   return 'Global';
 }
 
+function calculatePriorityScore(story) {
+  let score = story.impact === 'High' ? 75 : story.impact === 'Medium' ? 55 : 35;
+  const text = `${story.title} ${story.summary}`.toLowerCase();
+  if (/zero-day|actively exploited|critical|ransomware|breach/i.test(text)) score += 12;
+  if (/patch now|emergency|known exploited/i.test(text)) score += 8;
+  if (cveMatches(text).length) score += 5;
+  if (priorityProfile.includes(story.category)) score += 10;
+  return Math.min(score, 100);
+}
+
+function getWatchlistMatches(story) {
+  if (!watchlist.length) return [];
+  const text = `${story.title} ${story.summary} ${story.category} ${story.source}`.toLowerCase();
+  return watchlist.filter((keyword) => text.includes(keyword.toLowerCase()));
+}
+
+function getConfidenceLabel(story) {
+  const text = `${story.title} ${story.summary}`.toLowerCase();
+  if (/confirmed|patched|advisory|cve/i.test(text)) return 'High confidence';
+  if (/reportedly|researcher|investigating/i.test(text)) return 'Developing';
+  return 'Corroborate';
+}
+
 function createStoryFromFeed(item, index) {
   const title = item.title || `Cybersecurity update ${index + 1}`;
   const category = detectCategory(title);
   const summary = item.description ? item.description.replace(/<[^>]+>/g, '').trim().slice(0, 220) : `A new development in ${category.toLowerCase()} security is drawing attention from defenders worldwide.`;
-
   const source = item._sourceName || item.source || item.author || 'Live feed';
   const link = item.link || item.guid || item.url || 'https://thehackernews.com/';
-
-  return {
+  const story = {
     title,
     category,
     region: detectRegion(title),
     source,
     summary,
     whyItMatters: 'This story matters because it can affect organizations, consumers, and security teams in the coming days.',
-    impact: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'High' : 'Medium',
-    riskClass: /ransom|breach|leak|attack/i.test(title.toLowerCase()) ? 'risk-high' : 'risk-medium',
+    impact: /ransom|breach|leak|actively exploited|zero-day|critical/i.test(title.toLowerCase()) ? 'High' : 'Medium',
+    riskClass: /ransom|breach|leak|actively exploited|zero-day|critical/i.test(title.toLowerCase()) ? 'risk-high' : 'risk-medium',
     takeaway: 'Security teams should review their monitoring, patching, and communication plans promptly.',
-    referenceLink: link
+    referenceLink: link,
+    publishedAt: item.pubDate || item.publishedAt || item.date || null,
+    provenance: 'Live RSS',
+    cves: cveMatches(`${title} ${summary}`)
   };
+  story.priorityScore = calculatePriorityScore(story);
+  story.confidence = getConfidenceLabel(story);
+  return story;
 }
 
 async function loadLiveStories() {
@@ -463,8 +513,11 @@ function renderNews() {
     .map((story) => {
       const storyId = getStoryId(story);
       const isSaved = savedStoryIds.has(storyId);
-      const cves = [...new Set(cveMatches(`${story.title} ${story.summary}`))];
+      const cves = [...new Set(story.cves?.length ? story.cves : cveMatches(`${story.title} ${story.summary}`))];
       const priority = story.impact === 'High' ? 'Immediate action' : story.impact === 'Medium' ? 'Scheduled review' : 'Monitor';
+      const watchlistMatches = getWatchlistMatches(story);
+      const confidenceLabel = story.confidence || getConfidenceLabel(story);
+      const score = story.priorityScore ?? calculatePriorityScore(story);
       return `
         <article class="news-card" data-story-id="${escapeHtml(storyId)}">
           <div class="news-top">
@@ -472,13 +525,20 @@ function renderNews() {
               <span class="category-pill">${escapeHtml(story.category)}</span>
               <span class="source">${escapeHtml(story.region)} • ${escapeHtml(story.source)}</span>
               ${cves.length ? `<span class="cve-pill">${escapeHtml(cves.slice(0, 2).join(', '))}</span>` : ''}
+              ${watchlistMatches.length ? `<span class="watchlist-hit">Watchlist: ${escapeHtml(watchlistMatches.slice(0, 2).join(', '))}</span>` : ''}
             </div>
             <div class="card-actions">
               <span class="priority-label ${story.riskClass}">${priority}</span>
+              <span class="score-pill">Score ${score}</span>
               <button class="save-story" type="button" data-save-id="${escapeHtml(storyId)}" aria-pressed="${isSaved}">${isSaved ? 'Saved' : 'Save'}</button>
             </div>
           </div>
           <h3>${escapeHtml(story.title)}</h3>
+          <div class="provenance-row">
+            <span>${escapeHtml(story.provenance || 'Editorial briefing')}</span>
+            <span>${escapeHtml(confidenceLabel)}</span>
+            <time>${escapeHtml(formatShortDate(story.publishedAt))}</time>
+          </div>
           <p class="summary-text">${escapeHtml(story.summary)}</p>
           <div class="story-grid">
             <div class="story-box">
@@ -488,6 +548,24 @@ function renderNews() {
             <div class="story-box">
               <strong>Recommended action</strong>
               <span>${escapeHtml(story.takeaway)}</span>
+            </div>
+          </div>
+          <div class="metadata-row">
+            <div class="metadata-item">
+              <strong>Published</strong>
+              <span>${formatShortDate(story.publishedAt || story.pubDate)}</span>
+            </div>
+            <div class="metadata-item">
+              <strong>Confidence</strong>
+              <span class="confidence-label">${escapeHtml(confidenceLabel)}</span>
+            </div>
+            <div class="metadata-item">
+              <strong>Watchlist matches</strong>
+              <span class="watchlist-matches">${escapeHtml(watchlistMatches.join(', ') || 'None')}</span>
+            </div>
+            <div class="metadata-item">
+              <strong>Score</strong>
+              <span class="score-badge" style="background-position: ${100 - score}% 50%;">${score}</span>
             </div>
           </div>
           <a class="read-more-link" href="${safeLink(story.referenceLink)}" target="_blank" rel="noopener noreferrer">Open primary source ↗</a>
@@ -553,6 +631,51 @@ function renderSources() {
   }
 }
 
+function renderAdvisoryTimeline() {
+  const timeline = document.getElementById('advisory-timeline');
+  if (!timeline) return;
+
+  const ranked = [...stories]
+    .sort((a, b) => (calculatePriorityScore(b) - calculatePriorityScore(a)))
+    .slice(0, 5);
+
+  timeline.innerHTML = ranked.map((story) => {
+    const score = calculatePriorityScore(story);
+    return `
+      <div class="timeline-item">
+        <span class="timeline-node ${story.riskClass}"></span>
+        <div>
+          <time>${escapeHtml(formatShortDate(story.publishedAt))}</time>
+          <strong>${escapeHtml(story.title)}</strong>
+          <span>${escapeHtml(story.source)} • Score ${score}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWatchlist() {
+  const tags = document.getElementById('watchlist-tags');
+  const matches = document.getElementById('watchlist-matches');
+  const count = document.getElementById('watchlist-count');
+  if (!tags || !matches || !count) return;
+
+  tags.innerHTML = watchlist.map((keyword) => `
+    <button class="watchlist-tag" type="button" data-remove-watchlist="${escapeHtml(keyword)}" aria-label="Remove ${escapeHtml(keyword)}">
+      ${escapeHtml(keyword)} <span aria-hidden="true">×</span>
+    </button>
+  `).join('');
+
+  const matchingStories = stories.filter((story) => getWatchlistMatches(story).length);
+  count.textContent = `${matchingStories.length} ${matchingStories.length === 1 ? 'match' : 'matches'}`;
+  matches.innerHTML = matchingStories.slice(0, 4).map((story) => `
+    <a href="${safeLink(story.referenceLink)}" target="_blank" rel="noopener noreferrer">
+      <span>${escapeHtml(story.category)}</span>
+      <strong>${escapeHtml(story.title)}</strong>
+    </a>
+  `).join('') || '<p class="empty-watchlist">Add a vendor, CVE, sector, or technology keyword.</p>';
+}
+
 function toggleSources() {
   sourcesExpanded = !sourcesExpanded;
   renderSources();
@@ -567,6 +690,8 @@ function scheduleRefresh() {
     renderNews();
     renderSources();
     renderCharts();
+    renderAdvisoryTimeline();
+    renderWatchlist();
   }, 60 * 60 * 1000);
 }
 
@@ -576,6 +701,8 @@ async function init() {
   renderNews();
   renderSources();
   renderCharts();
+  renderAdvisoryTimeline();
+  renderWatchlist();
   await loadLiveStories();
   renderHeader();
   renderFilters();
@@ -653,6 +780,63 @@ async function init() {
   const toggle = document.getElementById('toggle-sources');
   if (toggle) {
     toggle.addEventListener('click', toggleSources);
+  }
+
+  const watchlistInput = document.getElementById('watchlist-input');
+  const addWatchlist = () => {
+    const keyword = watchlistInput?.value.trim();
+    if (!keyword) return;
+    const normalized = keyword.toLowerCase();
+    if (!watchlist.some((item) => item.toLowerCase() === normalized)) {
+      watchlist.push(keyword);
+      localStorage.setItem('cyber-pulse-watchlist', JSON.stringify(watchlist));
+      watchlistInput.value = '';
+      renderWatchlist();
+      renderNews();
+    }
+  };
+  document.getElementById('watchlist-add')?.addEventListener('click', addWatchlist);
+  watchlistInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') addWatchlist();
+  });
+  document.getElementById('watchlist-tags')?.addEventListener('click', (event) => {
+    const removeButton = event.target.closest('[data-remove-watchlist]');
+    if (!removeButton) return;
+    watchlist = watchlist.filter((item) => item !== removeButton.dataset.removeWatchlist);
+    localStorage.setItem('cyber-pulse-watchlist', JSON.stringify(watchlist));
+    renderWatchlist();
+    renderNews();
+  });
+
+  const priorityOptions = document.getElementById('priority-options');
+  priorityOptions?.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.checked = priorityProfile.includes(checkbox.value);
+  });
+  priorityOptions?.addEventListener('change', () => {
+    priorityProfile = [...priorityOptions.querySelectorAll('input:checked')].map((input) => input.value);
+    localStorage.setItem('cyber-pulse-priorities', JSON.stringify(priorityProfile));
+    renderHeader();
+    renderFilters();
+    renderNews();
+    renderAdvisoryTimeline();
+  });
+
+  document.getElementById('copy-brief')?.addEventListener('click', async (event) => {
+    const topStories = [...stories]
+      .sort((a, b) => calculatePriorityScore(b) - calculatePriorityScore(a))
+      .slice(0, 5);
+    const brief = `Cyber Pulse Daily — ${formatDate()}\n\n${topStories.map((story, index) => `${index + 1}. ${story.title} — ${story.impact} impact (${story.source})`).join('\n')}`;
+    try {
+      await navigator.clipboard.writeText(brief);
+      event.target.textContent = 'Brief copied';
+      setTimeout(() => { event.target.textContent = 'Copy executive brief'; }, 1800);
+    } catch {
+      event.target.textContent = 'Copy unavailable';
+    }
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 }
 

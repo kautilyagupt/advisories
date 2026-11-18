@@ -1,0 +1,10 @@
+{
+  "name": "Cyber Pulse Daily",
+  "short_name": "Cyber Pulse",
+  "description": "A concise global cybersecurity intelligence briefing.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "icons": []
+}

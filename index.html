@@ -11,10 +11,12 @@
     <meta property="og:title" content="Cyber Pulse Daily" />
     <meta property="og:description" content="A concise five-minute global cybersecurity briefing." />
     <meta property="og:type" content="website" />
+    <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119c" />
+    <link rel="stylesheet" href="style.css?v=20261119d" />
   </head>
   <body>
+    <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="background-glow"></div>
     <main id="main-content" class="app-shell">
@@ -104,6 +106,53 @@
         </article>
       </section>
 
+      <section class="intelligence-grid">
+        <article class="dashboard-card timeline-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Latest signal</p>
+              <h2>Advisory timeline</h2>
+            </div>
+            <span id="timeline-window" class="status-badge">Current feed</span>
+          </div>
+          <div id="advisory-timeline" class="advisory-timeline" aria-live="polite"></div>
+        </article>
+
+        <article class="dashboard-card watchlist-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Personal monitor</p>
+              <h2>Watchlist</h2>
+            </div>
+            <span id="watchlist-count" class="status-badge">0 matches</span>
+          </div>
+          <div class="watchlist-add">
+            <label for="watchlist-input" class="sr-only">Add watchlist keyword</label>
+            <input id="watchlist-input" type="text" placeholder="Vendor, CVE, sector…" />
+            <button id="watchlist-add" type="button">Add</button>
+          </div>
+          <div id="watchlist-tags" class="watchlist-tags"></div>
+          <div id="watchlist-matches" class="watchlist-matches"></div>
+        </article>
+      </section>
+
+      <section class="personalization-card">
+        <div>
+          <p class="eyebrow">Briefing profile</p>
+          <h2>Focus your intelligence feed</h2>
+          <p>Choose priorities to shape sorting and recommended coverage.</p>
+        </div>
+        <div id="priority-options" class="priority-options">
+          <label><input type="checkbox" value="Agent & AI Threats" /> Agent &amp; AI</label>
+          <label><input type="checkbox" value="Ransomware" /> Ransomware</label>
+          <label><input type="checkbox" value="Data Breach" /> Data breaches</label>
+          <label><input type="checkbox" value="Cloud Security" /> Cloud</label>
+          <label><input type="checkbox" value="Vulnerability" /> Vulnerabilities</label>
+          <label><input type="checkbox" value="Nation-State" /> Nation-state</label>
+        </div>
+        <button id="copy-brief" class="tool-button" type="button">Copy executive brief</button>
+      </section>
+
       <section id="briefing" class="digest-card">
         <div class="digest-header">
           <div>
@@ -158,6 +207,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119c"></script>
+    <script src="script.js?v=20261119d"></script>
   </body>
 </html>
