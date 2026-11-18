@@ -278,6 +278,12 @@ let priorityProfile = (() => {
   }
 })();
 
+let feedHealth = {
+  success: 0,
+  failed: 0,
+  lastCheck: null
+};
+
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
     weekday: 'long',
@@ -377,6 +383,24 @@ function createStoryFromFeed(item, index) {
   return story;
 }
 
+function readCachedStories() {
+  try {
+    const cached = JSON.parse(localStorage.getItem('cyber-pulse-live-stories') || 'null');
+    if (Array.isArray(cached) && cached.length) return cached;
+  } catch {
+    // Ignore malformed local cache and use curated fallback stories.
+  }
+  return null;
+}
+
+function cacheLiveStories(nextStories) {
+  try {
+    localStorage.setItem('cyber-pulse-live-stories', JSON.stringify(nextStories));
+  } catch {
+    // Storage may be unavailable in private or restricted browsers.
+  }
+}
+
 async function loadLiveStories() {
   document.getElementById('last-refresh').textContent = 'Updating…';
 
@@ -427,17 +451,25 @@ async function loadLiveStories() {
       if (uniqueItems.length === 6) break;
     }
 
+    feedHealth.success = results.filter((result) => result.status === 'fulfilled').length;
+    feedHealth.failed = results.length - feedHealth.success;
+    feedHealth.lastCheck = new Date();
+
     if (uniqueItems.length) {
       stories = uniqueItems.map(createStoryFromFeed);
+      cacheLiveStories(stories);
       lastRefreshTime = new Date();
-      document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime) + ' IST • Live';
+      document.getElementById('last-refresh').textContent = `${formatTime(lastRefreshTime)} IST • ${feedHealth.success}/${results.length} sources live`;
     } else {
-      document.getElementById('last-refresh').textContent = 'Fallback briefing';
+      const cachedStories = readCachedStories();
+      if (cachedStories?.length) stories = cachedStories;
+      document.getElementById('last-refresh').textContent = cachedStories?.length ? 'Fallback • Last known good' : 'Fallback briefing';
     }
   } catch (error) {
-    stories = [...FALLBACK_STORIES];
+    const cachedStories = readCachedStories();
+    stories = cachedStories && cachedStories.length ? cachedStories : [...FALLBACK_STORIES];
     lastRefreshTime = new Date();
-    document.getElementById('last-refresh').textContent = 'Fallback briefing';
+    document.getElementById('last-refresh').textContent = cachedStories?.length ? 'Fallback • Last known good' : 'Fallback briefing';
   }
 }
 
@@ -837,6 +869,24 @@ async function init() {
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  const manualRefresh = document.getElementById('manual-refresh');
+  if (manualRefresh) {
+    manualRefresh.addEventListener('click', async () => {
+      manualRefresh.disabled = true;
+      manualRefresh.textContent = 'Refreshing…';
+      await loadLiveStories();
+      renderHeader();
+      renderFilters();
+      renderNews();
+      renderSources();
+      renderCharts();
+      renderAdvisoryTimeline();
+      renderWatchlist();
+      manualRefresh.disabled = false;
+      manualRefresh.textContent = 'Refresh now';
+    });
   }
 }
 

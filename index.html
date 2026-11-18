@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119d" />
+    <link rel="stylesheet" href="style.css?v=20261119e" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -53,7 +53,8 @@
             <span class="pill">Global brief</span>
             <span class="pill">Risk snapshot</span>
             <span class="pill">Updates hourly</span>
-            <span id="last-refresh" class="pill" role="status" aria-live="polite">Refreshing…</span>
+            <span id="last-refresh" class="pill" role="status" aria-live="polite" aria-atomic="true">Refreshing…</span>
+            <button id="manual-refresh" class="pill refresh-button" type="button" aria-label="Refresh live advisories">Refresh now</button>
           </div>
         </div>
 
@@ -166,11 +167,11 @@
           <div class="tool-actions">
             <label class="search-box">
               <span class="sr-only">Search stories</span>
-              <input id="story-search" type="search" placeholder="Search intelligence…" autocomplete="off" />
+              <input id="story-search" type="search" placeholder="Search intelligence…" autocomplete="off" aria-label="Search cybersecurity stories" />
             </label>
             <label class="sort-box">
               <span class="sr-only">Sort stories</span>
-              <select id="story-sort">
+              <select id="story-sort" aria-label="Sort cybersecurity stories">
                 <option value="featured">Featured</option>
                 <option value="high-risk">Highest risk</option>
                 <option value="title">Title A–Z</option>
@@ -181,7 +182,7 @@
             <button id="print-brief" class="tool-button" type="button">Print / PDF</button>
           </div>
         </div>
-        <p id="result-count" class="result-count" aria-live="polite"></p>
+        <p id="result-count" class="result-count" aria-live="polite" aria-atomic="true"></p>
       </section>
 
       <section id="news-list" class="news-list" aria-label="Cybersecurity stories"></section>
@@ -207,6 +208,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119d"></script>
+    <script src="script.js?v=20261119e"></script>
   </body>
 </html>

@@ -12,7 +12,10 @@ A professional, privacy-friendly cybersecurity intelligence briefing for GitHub 
 - Search, category filtering, sorting, compact view, print/PDF, and executive brief copy
 - Advisory timeline and regional/global coverage views
 - PWA manifest and offline asset caching
+- Last-known-good story cache and provider health reporting
+- Manual feed refresh control
 - Responsive, keyboard-friendly, reduced-motion, and print styles
+- Browser smoke-test suite under `tests/`
 
 ## How to view it
 Open [index.html](index.html) in a browser.

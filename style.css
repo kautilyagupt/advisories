@@ -919,6 +919,21 @@ h1 {
   color: #c7d2fe;
   font-size: 0.76rem;
 }
+
+.refresh-button {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.refresh-button:hover {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 @media (max-width: 840px) {
   .hero,
   .dashboard-grid {
