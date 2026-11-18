@@ -16,6 +16,8 @@ A professional, privacy-friendly cybersecurity intelligence briefing for GitHub 
 - Manual feed refresh control
 - Responsive, keyboard-friendly, reduced-motion, and print styles
 - Browser smoke-test suite under `tests/`
+- Story-aware adaptive knowledge checks with explanations and topic review
+- Local best-score, attempt count, and weak-topic progress tracking
 
 ## How to view it
 Open [index.html](index.html) in a browser.

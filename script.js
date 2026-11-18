@@ -284,6 +284,15 @@ let feedHealth = {
   lastCheck: null
 };
 
+let quizState = {
+  questions: [],
+  index: 0,
+  score: 0,
+  answered: false,
+  topicResults: {},
+  missedTopics: []
+};
+
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
     weekday: 'long',
@@ -385,7 +394,7 @@ function createStoryFromFeed(item, index) {
 
 function readCachedStories() {
   try {
-    const cached = JSON.parse(localStorage.getItem('cyber-pulse-live-stories') || 'null');
+    const cached = JSON.parse(localStorage.getItem('cyber-pulse-live-stories' ) || 'null');
     if (Array.isArray(cached) && cached.length) return cached;
   } catch {
     // Ignore malformed local cache and use curated fallback stories.
@@ -888,6 +897,64 @@ async function init() {
       manualRefresh.textContent = 'Refresh now';
     });
   }
+
+  document.getElementById('start-quiz')?.addEventListener('click', startQuiz);
+  document.getElementById('restart-quiz')?.addEventListener('click', startQuiz);
+
+  document.getElementById('quiz-options')?.addEventListener('click', (event) => {
+    const option = event.target.closest('[data-answer]');
+    if (!option || quizState.answered) return;
+
+    quizState.answered = true;
+    const question = quizState.questions[quizState.index];
+    const selected = option.dataset.answer;
+    const correct = selected === question.answer;
+    const topicResult = quizState.topicResults[question.topic] || { correct: 0, total: 0 };
+    topicResult.total += 1;
+    if (correct) {
+      quizState.score += 1;
+      topicResult.correct += 1;
+    }
+    quizState.topicResults[question.topic] = topicResult;
+
+    document.querySelectorAll('.quiz-option').forEach((button) => {
+      button.disabled = true;
+      if (button.dataset.answer === question.answer) button.classList.add('correct');
+      if (button === option && !correct) button.classList.add('incorrect');
+    });
+
+    const feedback = document.getElementById('quiz-feedback');
+    feedback.className = `quiz-feedback ${correct ? 'success' : 'error'}`;
+    feedback.innerHTML = `<strong>${correct ? 'Correct' : 'Review this point'}</strong><span>${escapeHtml(correct ? 'Your understanding matches the briefing.' : `The better answer is: ${question.answer}`)}</span>`;
+    document.getElementById('quiz-explanation').hidden = false;
+    document.getElementById('next-question').disabled = false;
+  });
+
+  document.getElementById('quiz-explanation')?.addEventListener('click', () => {
+    const question = quizState.questions[quizState.index];
+    const feedback = document.getElementById('quiz-feedback');
+    feedback.innerHTML += `<span class="answer-explanation"><b>Explanation:</b> ${escapeHtml(question.explanation)}</span>`;
+  });
+
+  document.getElementById('next-question')?.addEventListener('click', () => {
+    if (!quizState.answered) return;
+    quizState.index += 1;
+    if (quizState.index >= quizState.questions.length) finishQuiz();
+    else renderQuizQuestion();
+  });
+
+  document.getElementById('review-misses')?.addEventListener('click', () => {
+    if (!quizState.missedTopics.length) {
+      activeFilter = 'All';
+    } else {
+      activeFilter = quizState.missedTopics[0];
+    }
+    renderFilters();
+    renderNews();
+    document.getElementById('briefing').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  updateQuizStartStats();
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -916,4 +983,174 @@ function getStoryId(story) {
 
 function cveMatches(value) {
   return String(value || '').match(/CVE-\d{4}-\d{4,7}/gi) || [];
+}
+
+function readQuizProgress() {
+  try {
+    const progress = JSON.parse(localStorage.getItem('cyber-pulse-quiz') || '{}');
+    return {
+      bestScore: Number(progress.bestScore) || 0,
+      sessions: Number(progress.sessions) || 0,
+      topicAccuracy: progress.topicAccuracy || {}
+    };
+  } catch {
+    return { bestScore: 0, sessions: 0, topicAccuracy: {} };
+  }
+}
+
+function saveQuizProgress(progress) {
+  try {
+    localStorage.setItem('cyber-pulse-quiz', JSON.stringify(progress));
+  } catch {
+    // Progress persistence is optional when storage is unavailable.
+  }
+}
+
+function shuffled(items) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function buildQuizQuestions(sourceStories) {
+  const pool = sourceStories.length ? sourceStories : FALLBACK_STORIES;
+  const questions = [];
+
+  pool.forEach((story) => {
+    const category = story.category || 'Threat Intelligence';
+    const correctAction = story.takeaway || 'Apply monitoring, containment, and recovery procedures.';
+
+    questions.push({
+      topic: category,
+      sourceTitle: story.title,
+      prompt: `Based on “${story.title}”, what is the most appropriate priority?`,
+      options: shuffled([
+        `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
+        'Ignore it until another source confirms the story',
+        'Treat it as unrelated to cybersecurity operations',
+        'Only review it during the next annual audit'
+      ]),
+      answer: `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
+      explanation: `The story is assessed as ${story.impact || 'Medium'} impact because ${story.whyItMatters || 'it may affect security operations and users.'}`
+    });
+
+    questions.push({
+      topic: category,
+      sourceTitle: story.title,
+      prompt: `What should a defender emphasize after reading this ${category.toLowerCase()} story?`,
+      options: shuffled([
+        correctAction,
+        'Wait without changing monitoring or response plans',
+        'Disable all security logs to reduce noise',
+        'Share credentials to speed up the investigation'
+      ]),
+      answer: correctAction,
+      explanation: `A useful response is to apply this action: ${correctAction}`
+    });
+
+    if (story.summary) {
+      questions.push({
+        topic: category,
+        sourceTitle: story.title,
+        prompt: `What main issue is described in “${story.title}”?`,
+        options: shuffled([story.summary, 'It describes a confirmed hardware recall.', 'It only announces a new social-media feature.', 'It reports a routine office equipment purchase.']),
+        answer: story.summary,
+        explanation: `The briefing summary states: ${story.summary}`
+      });
+    }
+  });
+
+  return shuffled(questions).slice(0, 5);
+}
+
+function renderQuizQuestion() {
+  const question = quizState.questions[quizState.index];
+  if (!question) {
+    finishQuiz();
+    return;
+  }
+
+  quizState.answered = false;
+  document.getElementById('quiz-topic').textContent = question.topic;
+  document.getElementById('quiz-counter').textContent = `Question ${quizState.index + 1} of ${quizState.questions.length}`;
+  document.getElementById('quiz-question').textContent = question.prompt;
+  document.getElementById('quiz-progress-label').textContent = `${quizState.index + 1} / ${quizState.questions.length}`;
+  document.getElementById('quiz-progress-bar').style.width = `${((quizState.index + 1) / quizState.questions.length) * 100}%`;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  document.getElementById('quiz-explanation').hidden = true;
+  document.getElementById('next-question').disabled = true;
+  document.getElementById('next-question').textContent = quizState.index === quizState.questions.length - 1 ? 'View results' : 'Next question';
+
+  document.getElementById('quiz-options').innerHTML = question.options.map((option, index) => `
+    <button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">
+      <span>${String.fromCharCode(65 + index)}</span>
+      <strong>${escapeHtml(option)}</strong>
+    </button>
+  `).join('');
+}
+
+function startQuiz() {
+  const sourceStories = getVisibleStories();
+  quizState = {
+    questions: buildQuizQuestions(sourceStories),
+    index: 0,
+    score: 0,
+    answered: false,
+    topicResults: {},
+    missedTopics: []
+  };
+
+  document.getElementById('quiz-start').hidden = true;
+  document.getElementById('quiz-results').hidden = true;
+  document.getElementById('quiz-content').hidden = false;
+  renderQuizQuestion();
+}
+
+function finishQuiz() {
+  const total = quizState.questions.length;
+  const percent = total ? Math.round((quizState.score / total) * 100) : 0;
+  const progress = readQuizProgress();
+  progress.sessions += 1;
+  progress.bestScore = Math.max(progress.bestScore, percent);
+
+  Object.entries(quizState.topicResults).forEach(([topic, result]) => {
+    const previous = progress.topicAccuracy[topic] || { correct: 0, total: 0 };
+    progress.topicAccuracy[topic] = {
+      correct: previous.correct + result.correct,
+      total: previous.total + result.total
+    };
+  });
+  saveQuizProgress(progress);
+
+  document.getElementById('quiz-content').hidden = true;
+  document.getElementById('quiz-results').hidden = false;
+  document.getElementById('quiz-score').textContent = `${percent}%`;
+  document.getElementById('quiz-progress-label').textContent = 'Complete';
+  document.getElementById('quiz-progress-bar').style.width = '100%';
+  document.getElementById('quiz-score-ring').style.setProperty('--score', `${percent * 3.6}deg`);
+  document.getElementById('quiz-result-title').textContent = percent >= 80 ? 'Strong understanding' : percent >= 60 ? 'Good foundation — review the gaps' : 'A review pass will help';
+
+  const weakTopics = Object.entries(quizState.topicResults)
+    .filter(([, result]) => result.correct / result.total < 0.7)
+    .map(([topic]) => topic);
+  quizState.missedTopics = weakTopics;
+  document.getElementById('quiz-review-summary').textContent = weakTopics.length
+    ? `Recommended review: ${weakTopics.join(', ')}.`
+    : 'You answered confidently across the topics covered.';
+
+  document.getElementById('quiz-topic-results').innerHTML = Object.entries(quizState.topicResults).map(([topic, result]) => `
+    <div><span>${escapeHtml(topic)}</span><strong>${result.correct}/${result.total}</strong></div>
+  `).join('');
+
+  updateQuizStartStats();
+}
+
+function updateQuizStartStats() {
+  const progress = readQuizProgress();
+  document.getElementById('quiz-best-score').textContent = progress.sessions ? `${progress.bestScore}%` : '—';
+  document.getElementById('quiz-sessions').textContent = String(progress.sessions);
+
+  const weakest = Object.entries(progress.topicAccuracy)
+    .map(([topic, result]) => ({ topic, accuracy: result.total ? result.correct / result.total : 0 }))
+    .sort((a, b) => a.accuracy - b.accuracy)[0];
+  document.getElementById('quiz-topic-focus').textContent = weakest ? weakest.topic : 'All topics';
 }

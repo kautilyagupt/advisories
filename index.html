@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119e" />
+    <link rel="stylesheet" href="style.css?v=20261119f" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -187,6 +187,57 @@
 
       <section id="news-list" class="news-list" aria-label="Cybersecurity stories"></section>
 
+      <section id="knowledge-check" class="quiz-card" aria-labelledby="quiz-title">
+        <div class="quiz-header">
+          <div>
+            <p class="eyebrow">Knowledge check</p>
+            <h2 id="quiz-title">Test what you learned</h2>
+            <p id="quiz-description">Questions are generated from the advisory stories you just read.</p>
+          </div>
+          <div class="quiz-progress-wrap">
+            <span id="quiz-progress-label">Ready</span>
+            <div class="quiz-progress-track" aria-hidden="true"><span id="quiz-progress-bar"></span></div>
+          </div>
+        </div>
+
+        <div id="quiz-start" class="quiz-start">
+          <div class="quiz-stats">
+            <div><strong id="quiz-best-score">—</strong><span>Best score</span></div>
+            <div><strong id="quiz-sessions">0</strong><span>Attempts</span></div>
+            <div><strong id="quiz-topic-focus">All topics</strong><span>Review focus</span></div>
+          </div>
+          <button id="start-quiz" class="primary-action" type="button">Start 5-question quiz</button>
+        </div>
+
+        <div id="quiz-content" class="quiz-content" hidden>
+          <div class="quiz-meta">
+            <span id="quiz-topic" class="category-pill"></span>
+            <span id="quiz-counter"></span>
+          </div>
+          <h3 id="quiz-question"></h3>
+          <div id="quiz-options" class="quiz-options"></div>
+          <div id="quiz-feedback" class="quiz-feedback" aria-live="polite"></div>
+          <div class="quiz-controls">
+            <button id="quiz-explanation" class="tool-button" type="button" hidden>Why?</button>
+            <button id="next-question" class="primary-action" type="button" disabled>Next question</button>
+          </div>
+        </div>
+
+        <div id="quiz-results" class="quiz-results" hidden>
+          <div class="score-ring" id="quiz-score-ring"><strong id="quiz-score">0%</strong><span>Score</span></div>
+          <div class="quiz-results-copy">
+            <p class="eyebrow">Session complete</p>
+            <h3 id="quiz-result-title">Learning progress recorded</h3>
+            <p id="quiz-review-summary"></p>
+            <div id="quiz-topic-results" class="topic-results"></div>
+          </div>
+          <div class="quiz-result-actions">
+            <button id="restart-quiz" class="primary-action" type="button">Try another quiz</button>
+            <button id="review-misses" class="tool-button" type="button">Review missed topics</button>
+          </div>
+        </div>
+      </section>
+
       <section id="sources" class="source-card bottom-card">
         <div class="digest-header">
           <div>
@@ -208,6 +259,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119e"></script>
+    <script src="script.js?v=20261119f"></script>
   </body>
 </html>
