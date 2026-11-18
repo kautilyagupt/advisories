@@ -27,6 +27,7 @@ test('search, sort, compact, and filters work', async ({ page }) => {
 test('saved stories persist and saved-only mode filters results', async ({ page }) => {
   await page.evaluate(() => localStorage.removeItem('cyber-pulse-saved'));
   await page.reload();
+  await expect(page.locator('[data-save-id]').first()).toBeVisible();
   await page.locator('[data-save-id]').first().click();
   await expect(page.locator('#saved-count')).toHaveText('1');
   await page.locator('#saved-toggle').click();
@@ -61,4 +62,15 @@ test('page has no horizontal overflow across viewports', async ({ page }) => {
 
 test('service worker registers', async ({ page }) => {
   await expect.poll(async () => page.evaluate(async () => Boolean(await navigator.serviceWorker.getRegistration()))).toBeTruthy();
+});
+
+test('latest video briefing supports playback controls', async ({ page }) => {
+  await expect(page.locator('#video-briefing')).toBeVisible();
+  await expect(page.locator('#video-story-title')).not.toHaveText('Preparing today’s briefing…');
+  await page.locator('#video-play').click();
+  await expect(page.locator('#video-stage')).toHaveClass(/is-playing/);
+  await page.locator('#video-mute').click();
+  await expect(page.locator('#video-mute')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#video-play').click();
+  await expect(page.locator('#video-stage')).not.toHaveClass(/is-playing/);
 });

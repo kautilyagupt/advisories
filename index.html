@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119f" />
+    <link rel="stylesheet" href="style.css?v=20261119i" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -154,6 +154,41 @@
         <button id="copy-brief" class="tool-button" type="button">Copy executive brief</button>
       </section>
 
+      <section id="video-briefing" class="video-card" aria-labelledby="video-title">
+        <div class="video-heading">
+          <div>
+            <p class="eyebrow">Audio + visual brief</p>
+            <h2 id="video-title">Listen to the latest intelligence</h2>
+          </div>
+          <span id="video-duration" class="status-badge">About 5 minutes</span>
+        </div>
+
+        <div id="video-stage" class="video-stage" role="region" aria-label="Animated cybersecurity news briefing">
+          <div class="video-grid" aria-hidden="true"></div>
+          <div class="video-scanline" aria-hidden="true"></div>
+          <div class="video-slide">
+            <div class="video-slide-meta">
+              <span id="video-number">Story 1 of 1</span>
+              <span id="video-category" class="category-pill">Cybersecurity</span>
+            </div>
+            <h3 id="video-story-title">Preparing today’s briefing…</h3>
+            <p id="video-caption">The latest advisory stories will appear here with synchronized narration.</p>
+            <div id="video-action" class="video-action"><strong>Recommended action</strong><span>Review the briefing.</span></div>
+          </div>
+          <div class="video-controls-overlay">
+            <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play briefing</button>
+            <button id="video-mute" class="video-icon-button" type="button" aria-label="Mute narration" aria-pressed="false">🔊</button>
+          </div>
+        </div>
+
+        <div class="video-timeline">
+          <button id="video-prev" class="video-icon-button" type="button" aria-label="Previous story">←</button>
+          <div class="video-progress-track" aria-label="Briefing progress"><span id="video-progress"></span></div>
+          <span id="video-slide-counter">0 / 0</span>
+          <button id="video-next" class="video-icon-button" type="button" aria-label="Next story">→</button>
+        </div>
+      </section>
+
       <section id="briefing" class="digest-card">
         <div class="digest-header">
           <div>
@@ -206,7 +241,15 @@
             <div><strong id="quiz-sessions">0</strong><span>Attempts</span></div>
             <div><strong id="quiz-topic-focus">All topics</strong><span>Review focus</span></div>
           </div>
-          <button id="start-quiz" class="primary-action" type="button">Start 5-question quiz</button>
+          <div class="quiz-start-actions">
+            <label for="quiz-difficulty">Difficulty</label>
+            <select id="quiz-difficulty" aria-label="Quiz difficulty">
+              <option value="standard">Standard</option>
+              <option value="hard" selected>Hard</option>
+              <option value="expert">Expert</option>
+            </select>
+            <button id="start-quiz" class="primary-action" type="button">Start 5-question quiz</button>
+          </div>
         </div>
 
         <div id="quiz-content" class="quiz-content" hidden>
@@ -259,6 +302,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119f"></script>
+    <script src="script.js?v=20261119i"></script>
   </body>
 </html>

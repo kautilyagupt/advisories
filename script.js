@@ -293,6 +293,16 @@ let quizState = {
   missedTopics: []
 };
 
+let quizDifficulty = 'hard';
+
+let videoBrief = {
+  stories: [],
+  index: 0,
+  playing: false,
+  muted: false,
+  timer: null
+};
+
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
     weekday: 'long',
@@ -537,6 +547,25 @@ function getVisibleStories() {
   return visible;
 }
 
+function getBriefingStories() {
+  if (typeof getVisibleStories === 'function') {
+    const visible = getVisibleStories();
+    if (visible.length) return visible.slice(0, 6);
+  }
+  return stories.length ? stories.slice(0, 6) : [...FALLBACK_STORIES].slice(0, 6);
+}
+
+function syncVideoBriefing() {
+  const previousStory = videoBrief.stories[videoBrief.index];
+  videoBrief.stories = getBriefingStories();
+  const previousIndex = previousStory
+    ? videoBrief.stories.findIndex((story) => getStoryId(story) === getStoryId(previousStory))
+    : -1;
+  videoBrief.index = previousIndex >= 0 ? previousIndex : 0;
+  renderVideoSlide();
+  if (videoBrief.playing) scheduleVideoAdvance();
+}
+
 function renderNews() {
   const list = document.getElementById('news-list');
   const visibleStories = getVisibleStories();
@@ -733,6 +762,7 @@ function scheduleRefresh() {
     renderCharts();
     renderAdvisoryTimeline();
     renderWatchlist();
+    syncVideoBriefing();
   }, 60 * 60 * 1000);
 }
 
@@ -744,12 +774,15 @@ async function init() {
   renderCharts();
   renderAdvisoryTimeline();
   renderWatchlist();
+  videoBrief.stories = getBriefingStories();
+  renderVideoSlide();
   await loadLiveStories();
   renderHeader();
   renderFilters();
   renderNews();
   renderSources();
   renderCharts();
+  syncVideoBriefing();
   scheduleRefresh();
 
   document.getElementById('filters').addEventListener('click', (event) => {
@@ -759,6 +792,7 @@ async function init() {
     activeFilter = button.dataset.filter;
     renderFilters();
     renderNews();
+    syncVideoBriefing();
   });
 
   const search = document.getElementById('story-search');
@@ -766,6 +800,7 @@ async function init() {
     search.addEventListener('input', (event) => {
       searchQuery = event.target.value.trim().toLowerCase();
       renderNews();
+      syncVideoBriefing();
     });
   }
 
@@ -774,6 +809,7 @@ async function init() {
     sort.addEventListener('change', (event) => {
       sortMode = event.target.value;
       renderNews();
+      syncVideoBriefing();
     });
   }
 
@@ -784,6 +820,7 @@ async function init() {
       savedToggle.setAttribute('aria-pressed', String(savedOnly));
       savedToggle.classList.toggle('active', savedOnly);
       renderNews();
+      syncVideoBriefing();
     });
   }
 
@@ -955,6 +992,42 @@ async function init() {
   });
 
   updateQuizStartStats();
+
+  document.getElementById('video-play')?.addEventListener('click', () => {
+    if (videoBrief.playing) {
+      stopVideoBrief();
+    } else {
+      if (!videoBrief.stories.length) videoBrief.stories = getBriefingStories();
+      if (videoBrief.index >= videoBrief.stories.length) videoBrief.index = 0;
+      startVideoBrief();
+    }
+  });
+
+  document.getElementById('video-mute')?.addEventListener('click', (event) => {
+    videoBrief.muted = !videoBrief.muted;
+    event.currentTarget.setAttribute('aria-pressed', String(videoBrief.muted));
+    event.currentTarget.textContent = videoBrief.muted ? '🔇' : '🔊';
+    if (videoBrief.muted) stopNarration();
+    else if (videoBrief.playing) renderVideoSlide();
+  });
+
+  document.getElementById('video-prev')?.addEventListener('click', () => {
+    videoBrief.index = Math.max(0, videoBrief.index - 1);
+    renderVideoSlide();
+  });
+
+  document.getElementById('video-next')?.addEventListener('click', () => {
+    nextVideoSlide(false);
+  });
+
+  const difficultySelect = document.getElementById('quiz-difficulty');
+  if (difficultySelect) {
+    difficultySelect.value = quizDifficulty;
+    difficultySelect.addEventListener('change', (event) => {
+      quizDifficulty = event.target.value;
+      localStorage.setItem('cyber-pulse-quiz-difficulty', quizDifficulty);
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -985,89 +1058,12 @@ function cveMatches(value) {
   return String(value || '').match(/CVE-\d{4}-\d{4,7}/gi) || [];
 }
 
-function readQuizProgress() {
-  try {
-    const progress = JSON.parse(localStorage.getItem('cyber-pulse-quiz') || '{}');
-    return {
-      bestScore: Number(progress.bestScore) || 0,
-      sessions: Number(progress.sessions) || 0,
-      topicAccuracy: progress.topicAccuracy || {}
-    };
-  } catch {
-    return { bestScore: 0, sessions: 0, topicAccuracy: {} };
-  }
-}
-
-function saveQuizProgress(progress) {
-  try {
-    localStorage.setItem('cyber-pulse-quiz', JSON.stringify(progress));
-  } catch {
-    // Progress persistence is optional when storage is unavailable.
-  }
-}
-
-function shuffled(items) {
-  return [...items].sort(() => Math.random() - 0.5);
-}
-
-function buildQuizQuestions(sourceStories) {
-  const pool = sourceStories.length ? sourceStories : FALLBACK_STORIES;
-  const questions = [];
-
-  pool.forEach((story) => {
-    const category = story.category || 'Threat Intelligence';
-    const correctAction = story.takeaway || 'Apply monitoring, containment, and recovery procedures.';
-
-    questions.push({
-      topic: category,
-      sourceTitle: story.title,
-      prompt: `Based on “${story.title}”, what is the most appropriate priority?`,
-      options: shuffled([
-        `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
-        'Ignore it until another source confirms the story',
-        'Treat it as unrelated to cybersecurity operations',
-        'Only review it during the next annual audit'
-      ]),
-      answer: `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
-      explanation: `The story is assessed as ${story.impact || 'Medium'} impact because ${story.whyItMatters || 'it may affect security operations and users.'}`
-    });
-
-    questions.push({
-      topic: category,
-      sourceTitle: story.title,
-      prompt: `What should a defender emphasize after reading this ${category.toLowerCase()} story?`,
-      options: shuffled([
-        correctAction,
-        'Wait without changing monitoring or response plans',
-        'Disable all security logs to reduce noise',
-        'Share credentials to speed up the investigation'
-      ]),
-      answer: correctAction,
-      explanation: `A useful response is to apply this action: ${correctAction}`
-    });
-
-    if (story.summary) {
-      questions.push({
-        topic: category,
-        sourceTitle: story.title,
-        prompt: `What main issue is described in “${story.title}”?`,
-        options: shuffled([story.summary, 'It describes a confirmed hardware recall.', 'It only announces a new social-media feature.', 'It reports a routine office equipment purchase.']),
-        answer: story.summary,
-        explanation: `The briefing summary states: ${story.summary}`
-      });
-    }
-  });
-
-  return shuffled(questions).slice(0, 5);
-}
-
 function renderQuizQuestion() {
   const question = quizState.questions[quizState.index];
   if (!question) {
     finishQuiz();
     return;
   }
-
   quizState.answered = false;
   document.getElementById('quiz-topic').textContent = question.topic;
   document.getElementById('quiz-counter').textContent = `Question ${quizState.index + 1} of ${quizState.questions.length}`;
@@ -1079,7 +1075,6 @@ function renderQuizQuestion() {
   document.getElementById('quiz-explanation').hidden = true;
   document.getElementById('next-question').disabled = true;
   document.getElementById('next-question').textContent = quizState.index === quizState.questions.length - 1 ? 'View results' : 'Next question';
-
   document.getElementById('quiz-options').innerHTML = question.options.map((option, index) => `
     <button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">
       <span>${String.fromCharCode(65 + index)}</span>
@@ -1098,11 +1093,31 @@ function startQuiz() {
     topicResults: {},
     missedTopics: []
   };
-
   document.getElementById('quiz-start').hidden = true;
   document.getElementById('quiz-results').hidden = true;
   document.getElementById('quiz-content').hidden = false;
   renderQuizQuestion();
+}
+
+function readQuizProgress() {
+  try {
+    const progress = JSON.parse(localStorage.getItem('cyber-pulse-quiz') || '{}');
+    return {
+      bestScore: Number(progress.bestScore) || 0,
+      sessions: Number(progress.sessions) || 0,
+      topicAccuracy: progress.topicAccuracy || {}
+    };
+  } catch {
+    return { bestScore: 0, sessions: 0, topicAccuracy: {} };
+  }
+}
+
+function saveQuizProgress(progress) {
+  try {
+    localStorage.setItem('cyber-pulse-quiz', JSON.stringify(progress));
+  } catch {
+    // Progress persistence is optional in restricted browsers.
+  }
 }
 
 function finishQuiz() {
@@ -1111,16 +1126,11 @@ function finishQuiz() {
   const progress = readQuizProgress();
   progress.sessions += 1;
   progress.bestScore = Math.max(progress.bestScore, percent);
-
   Object.entries(quizState.topicResults).forEach(([topic, result]) => {
     const previous = progress.topicAccuracy[topic] || { correct: 0, total: 0 };
-    progress.topicAccuracy[topic] = {
-      correct: previous.correct + result.correct,
-      total: previous.total + result.total
-    };
+    progress.topicAccuracy[topic] = { correct: previous.correct + result.correct, total: previous.total + result.total };
   });
   saveQuizProgress(progress);
-
   document.getElementById('quiz-content').hidden = true;
   document.getElementById('quiz-results').hidden = false;
   document.getElementById('quiz-score').textContent = `${percent}%`;
@@ -1128,19 +1138,9 @@ function finishQuiz() {
   document.getElementById('quiz-progress-bar').style.width = '100%';
   document.getElementById('quiz-score-ring').style.setProperty('--score', `${percent * 3.6}deg`);
   document.getElementById('quiz-result-title').textContent = percent >= 80 ? 'Strong understanding' : percent >= 60 ? 'Good foundation — review the gaps' : 'A review pass will help';
-
-  const weakTopics = Object.entries(quizState.topicResults)
-    .filter(([, result]) => result.correct / result.total < 0.7)
-    .map(([topic]) => topic);
-  quizState.missedTopics = weakTopics;
-  document.getElementById('quiz-review-summary').textContent = weakTopics.length
-    ? `Recommended review: ${weakTopics.join(', ')}.`
-    : 'You answered confidently across the topics covered.';
-
-  document.getElementById('quiz-topic-results').innerHTML = Object.entries(quizState.topicResults).map(([topic, result]) => `
-    <div><span>${escapeHtml(topic)}</span><strong>${result.correct}/${result.total}</strong></div>
-  `).join('');
-
+  quizState.missedTopics = Object.entries(quizState.topicResults).filter(([, result]) => result.correct / result.total < 0.7).map(([topic]) => topic);
+  document.getElementById('quiz-review-summary').textContent = quizState.missedTopics.length ? `Recommended review: ${quizState.missedTopics.join(', ')}.` : 'You answered confidently across the topics covered.';
+  document.getElementById('quiz-topic-results').innerHTML = Object.entries(quizState.topicResults).map(([topic, result]) => `<div><span>${escapeHtml(topic)}</span><strong>${result.correct}/${result.total}</strong></div>`).join('');
   updateQuizStartStats();
 }
 
@@ -1148,9 +1148,183 @@ function updateQuizStartStats() {
   const progress = readQuizProgress();
   document.getElementById('quiz-best-score').textContent = progress.sessions ? `${progress.bestScore}%` : '—';
   document.getElementById('quiz-sessions').textContent = String(progress.sessions);
-
-  const weakest = Object.entries(progress.topicAccuracy)
-    .map(([topic, result]) => ({ topic, accuracy: result.total ? result.correct / result.total : 0 }))
-    .sort((a, b) => a.accuracy - b.accuracy)[0];
+  const weakest = Object.entries(progress.topicAccuracy).map(([topic, result]) => ({ topic, accuracy: result.total ? result.correct / result.total : 0 })).sort((a, b) => a.accuracy - b.accuracy)[0];
   document.getElementById('quiz-topic-focus').textContent = weakest ? weakest.topic : 'All topics';
+}
+
+function shuffled(items) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function buildQuizQuestions(sourceStories) {
+  const pool = sourceStories.length ? sourceStories : FALLBACK_STORIES;
+  const shuffledPool = shuffled(pool).slice(0, 5);
+
+  if (quizDifficulty === 'expert') {
+    return shuffledPool.map(buildExpertQuestion);
+  }
+
+  if (quizDifficulty === 'hard') {
+    return shuffledPool.map((story) => Math.random() > 0.45 ? buildHardQuestion(story) : buildReadingTrapQuestion(story));
+  }
+
+  const questions = [];
+  shuffledPool.forEach((story) => {
+    const category = story.category || 'Threat Intelligence';
+    const correctAction = story.takeaway || 'Apply monitoring, containment, and recovery procedures.';
+    questions.push({
+      topic: category,
+      sourceTitle: story.title,
+      prompt: `Based on “${story.title}”, what is the most appropriate priority?`,
+      options: shuffled([
+        `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
+        'Ignore it until another source confirms the story',
+        'Treat it as unrelated to cybersecurity operations',
+        'Only review it during the next annual audit'
+      ]),
+      answer: `${story.impact || 'Medium'} impact: ${story.impact === 'High' ? 'take immediate action' : 'schedule a prompt review'}`,
+      explanation: `The story is assessed as ${story.impact || 'Medium'} impact because ${story.whyItMatters || 'it may affect security operations and users.'}`
+    });
+  });
+  return questions;
+}
+
+function buildReadingTrapQuestion(story) {
+  const options = [
+    story.summary,
+    'The story only confirms that every organization mentioned was compromised.',
+    'The story proves that the issue is harmless and requires no monitoring.',
+    'The article reports a new general-productivity feature rather than a security event.'
+  ];
+  return {
+    topic: story.category || 'Threat Intelligence',
+    sourceTitle: story.title,
+    prompt: `Which statement is supported by “${story.title}”?`,
+    options: shuffled(options),
+    answer: story.summary,
+    explanation: `Supported evidence: ${story.summary}`
+  };
+}
+
+function buildHardQuestion(story) {
+  const category = story.category || 'Threat Intelligence';
+  const isHigh = story.impact === 'High';
+  return {
+    topic: category,
+    sourceTitle: story.title,
+    prompt: `A defender sees: “${story.title}” Which response most accurately balances urgency and evidence?`,
+    options: shuffled([
+      isHigh
+        ? 'Immediately contain exposed assets, verify telemetry, notify the response lead, and apply the primary-source remediation while continuing impact assessment.'
+        : 'Validate exposure against asset inventory, prioritize a focused patch or control review, and raise urgency only if evidence expands.',
+      'Wait for a second unrelated incident before taking any protective action.',
+      'Disable all endpoint monitoring to avoid false positives.',
+      'Assume the headline proves a compromise and wipe every affected system without preserving evidence.'
+    ]),
+    answer: isHigh
+      ? 'Immediately contain exposed assets, verify telemetry, notify the response lead, and apply the primary-source remediation while continuing impact assessment.'
+      : 'Validate exposure against asset inventory, prioritize a focused patch or control review, and raise urgency only if evidence expands.',
+    explanation: `High-confidence response requires proportional action: ${story.takeaway || 'review monitoring and remediation plans.'} Evidence should guide containment scope.`
+  };
+}
+
+function buildExpertQuestion(story) {
+  const category = story.category || 'Threat Intelligence';
+  const cves = cveMatches(`${story.title} ${story.summary}`);
+  return {
+    topic: category,
+    sourceTitle: story.title,
+    prompt: `Which next step is the strongest before assigning enterprise-wide emergency status to “${story.title}”?`,
+    options: shuffled([
+      `Correlate the primary advisory, affected versions or assets, exploitation evidence, and ${cves.length ? cves.join(', ') : 'available indicators'} before defining scope and urgency.`,
+      'Emergency status should be assigned solely from headline severity.',
+      'No validation is needed if the story appears on multiple websites.',
+      'The incident owner should first collect employee passwords for comparison.'
+    ]),
+    answer: `Correlate the primary advisory, affected versions or assets, exploitation evidence, and ${cves.length ? cves.join(', ') : 'available indicators'} before defining scope and urgency.`,
+    explanation: 'A defensible security decision combines primary-source verification, asset applicability, exploit status, and evidence preservation before escalation.'
+  };
+}
+
+function stopNarration() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function speakBriefing(text) {
+  if (videoBrief.muted || !('speechSynthesis' in window)) return;
+  stopNarration();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find((voice) => /en-(US|GB|IN)/i.test(voice.lang)) || voices[0];
+  if (preferred) utterance.voice = preferred;
+  utterance.rate = 0.92;
+  utterance.onend = () => {
+    if (!videoBrief.playing) return;
+    if (videoBrief.timer) clearTimeout(videoBrief.timer);
+    videoBrief.timer = setTimeout(() => nextVideoSlide(true), 700);
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+function renderVideoSlide() {
+  const storiesToShow = videoBrief.stories;
+  if (!storiesToShow.length) {
+    document.getElementById('video-story-title').textContent = 'No stories are available yet';
+    document.getElementById('video-caption').textContent = 'Refresh the briefing or change filters to generate a new video brief.';
+    return;
+  }
+  videoBrief.index = Math.max(0, Math.min(videoBrief.index, storiesToShow.length - 1));
+  const story = storiesToShow[videoBrief.index];
+  const stage = document.getElementById('video-stage');
+  stage.classList.remove('slide-enter');
+  void stage.offsetWidth;
+  stage.classList.add('slide-enter');
+  document.getElementById('video-number').textContent = `Story ${videoBrief.index + 1} of ${storiesToShow.length}`;
+  document.getElementById('video-category').textContent = story.category;
+  document.getElementById('video-story-title').textContent = story.title;
+  document.getElementById('video-caption').textContent = story.summary;
+  document.getElementById('video-action').innerHTML = `<strong>Recommended action</strong><span>${escapeHtml(story.takeaway)}</span>`;
+  document.getElementById('video-slide-counter').textContent = `${videoBrief.index + 1} / ${storiesToShow.length}`;
+  document.getElementById('video-progress').style.width = `${((videoBrief.index + 1) / storiesToShow.length) * 100}%`;
+  if (videoBrief.playing) speakBriefing(`${story.category}. ${story.title}. ${story.summary}. Recommended action: ${story.takeaway}`);
+}
+
+function stopVideoBrief() {
+  videoBrief.playing = false;
+  if (videoBrief.timer) clearTimeout(videoBrief.timer);
+  stopNarration();
+  document.getElementById('video-stage')?.classList.remove('is-playing');
+  document.getElementById('video-play').textContent = '▶ Play briefing';
+}
+
+function scheduleVideoAdvance() {
+  if (videoBrief.timer) clearTimeout(videoBrief.timer);
+  if (!videoBrief.playing) return;
+  videoBrief.timer = setTimeout(() => nextVideoSlide(true), 16000);
+}
+
+function nextVideoSlide(autoAdvance = false) {
+  if (videoBrief.index < videoBrief.stories.length - 1) {
+    videoBrief.index += 1;
+    renderVideoSlide();
+  } else if (videoBrief.playing) {
+    stopVideoBrief();
+    document.getElementById('video-play').textContent = '↻ Replay briefing';
+  }
+  if (videoBrief.playing && !autoAdvance) scheduleVideoAdvance();
+}
+
+function startVideoBrief() {
+  videoBrief.stories = getBriefingStories();
+  if (!videoBrief.stories.length) return;
+  if (!videoBrief.playing) videoBrief.playing = true;
+  else {
+    stopVideoBrief();
+    return;
+  }
+  if (videoBrief.index >= videoBrief.stories.length) videoBrief.index = 0;
+  renderVideoSlide();
+  document.getElementById('video-stage')?.classList.add('is-playing');
+  document.getElementById('video-play').textContent = 'Ⅱ Pause briefing';
+  scheduleVideoAdvance();
 }
