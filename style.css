@@ -2047,3 +2047,117 @@ h1 {
     transition: none !important;
   }
 }
+
+.video-stage.whiteboard-stage {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border-color: #e5dfd1;
+  border-radius: 16px;
+  background: #fffdf7;
+  box-shadow: 0 12px 32px rgba(2, 8, 23, 0.18);
+}
+
+.whiteboard-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fffdf7;
+}
+
+.board-paper {
+  fill: #fffdf7;
+  stroke: #e8e1d3;
+  stroke-width: 6;
+}
+
+.board-ground {
+  fill: none;
+  stroke: #e4dccb;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.whiteboard-ink {
+  fill: none;
+  stroke: #24354a;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.whiteboard-ink .ink-blue { stroke: #4389bd; }
+.whiteboard-ink .ink-red { stroke: #ce554d; }
+.whiteboard-ink .ink-green { stroke: #4a9369; }
+
+.board-phase {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.board-phase.is-active {
+  opacity: 1;
+}
+
+.board-phase.draw-in .whiteboard-ink > * {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: whiteboard-draw 1.6s ease-out forwards;
+}
+
+.board-phase.draw-in .whiteboard-ink > :nth-child(2) { animation-delay: 0.15s; }
+.board-phase.draw-in .whiteboard-ink > :nth-child(3) { animation-delay: 0.3s; }
+.board-phase.draw-in .whiteboard-ink > :nth-child(4) { animation-delay: 0.45s; }
+
+.issue-vulnerability,
+.issue-breach,
+.issue-ransomware {
+  display: none;
+}
+
+#whiteboard-art[data-story-type="vulnerability"] .issue-vulnerability,
+#whiteboard-art[data-story-type="breach"] .issue-breach,
+#whiteboard-art[data-story-type="ransomware"] .issue-ransomware,
+#whiteboard-art[data-story-type="default"] .issue-default {
+  display: inline;
+}
+
+@keyframes whiteboard-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.video-player-controls {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.video-player-controls .video-timeline {
+  min-width: 0;
+}
+
+.story-chapters button {
+  min-height: 42px;
+}
+
+@media (max-width: 640px) {
+  .video-player-controls {
+    grid-template-columns: 1fr auto;
+  }
+
+  .video-player-controls .video-timeline {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-phase,
+  .board-phase.draw-in .whiteboard-ink > * {
+    animation: none !important;
+    transition: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

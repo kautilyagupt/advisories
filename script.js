@@ -1302,17 +1302,24 @@ function speakBriefing(text) {
 
 function showCartoonChapter(index) {
   const chapter = videoBrief.chapters[index];
-  const speech = document.querySelector('.cartoon-speech');
-  if (!chapter || !speech) return;
+  if (!chapter) return;
   videoBrief.chapterIndex = index;
-  speech.classList.add('chapter-change');
+  document.querySelectorAll('.board-phase').forEach((phase, phaseIndex) => {
+    const active = phaseIndex === index;
+    phase.classList.toggle('is-active', active);
+    phase.classList.remove('draw-in');
+    if (active && videoBrief.playing) {
+      void phase.getBoundingClientRect();
+      phase.classList.add('draw-in');
+    }
+  });
   document.querySelectorAll('.story-chapters button').forEach((item, itemIndex) => {
     item.classList.toggle('active', itemIndex === index);
+    item.setAttribute('aria-pressed', String(itemIndex === index));
   });
   setTimeout(() => {
     document.getElementById('cartoon-kicker').textContent = chapter.kicker;
     document.getElementById('cartoon-message').textContent = chapter.text;
-    speech.classList.remove('chapter-change');
   }, 180);
 }
 
@@ -1357,6 +1364,15 @@ function renderVideoSlide() {
   document.getElementById('cartoon-kicker').textContent = 'WHAT HAPPENED';
   document.getElementById('cartoon-message').textContent = story.summary || story.title;
   stage.dataset.impact = (story.impact || 'Medium').toLowerCase();
+  const storyType = /vulnerab|zero.day|patch/i.test(story.category) || /vulnerab|zero.day/i.test(story.title)
+    ? 'vulnerability'
+    : /breach|leak/i.test(story.category) || /breach|leak/i.test(story.title)
+      ? 'breach'
+      : /ransomware/i.test(story.category) || /ransomware/i.test(story.title)
+        ? 'ransomware'
+        : 'default';
+  document.getElementById('whiteboard-art').dataset.storyType = storyType;
+  document.getElementById('whiteboard-art').setAttribute('aria-label', `Whiteboard illustration of a ${story.category || 'cybersecurity'} story`);
   document.getElementById('video-slide-counter').textContent = `${videoBrief.index + 1} / ${storiesToShow.length}`;
   document.getElementById('video-progress').style.width = `${((videoBrief.index + 1) / storiesToShow.length) * 100}%`;
   renderCartoonStory(story);

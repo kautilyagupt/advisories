@@ -64,14 +64,17 @@ test('service worker registers', async ({ page }) => {
   await expect.poll(async () => page.evaluate(async () => Boolean(await navigator.serviceWorker.getRegistration()))).toBeTruthy();
 });
 
-test('cartoon video briefing supports chapter and playback controls', async ({ page }) => {
+test('whiteboard video briefing has no on-canvas text and supports playback controls', async ({ page }) => {
   await expect(page.locator('#video-briefing')).toBeVisible();
   await expect(page.locator('#video-story-title')).not.toHaveText('Preparing today’s briefing…');
-  await expect(page.locator('.cartoon-host')).toBeVisible();
+  await expect(page.locator('#whiteboard-art')).toBeVisible();
+  await expect(page.locator('#whiteboard-art text')).toHaveCount(0);
+  await expect(page.locator('#video-stage > *')).toHaveCount(1);
   await expect(page.locator('.story-chapters button')).toHaveCount(3);
   await expect(page.locator('#video-mute')).toHaveAttribute('aria-pressed', 'false');
   await page.locator('[data-chapter="1"]').click();
   await expect(page.locator('#cartoon-kicker')).toHaveText('WHY IT MATTERS');
+  await expect(page.locator('.board-phase.is-active')).toHaveAttribute('data-phase', '1');
   await page.locator('#video-play').click();
   await expect(page.locator('#video-stage')).toHaveClass(/is-playing/);
   await page.locator('[data-chapter="2"]').click();

@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119k" />
+    <link rel="stylesheet" href="style.css?v=20261119l" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -157,72 +157,142 @@
       <section id="video-briefing" class="video-card" aria-labelledby="video-title">
         <div class="video-heading">
           <div>
-            <p class="eyebrow">Visual intelligence briefing</p>
+            <p class="eyebrow">Visual whiteboard briefing</p>
             <h2 id="video-title">Watch the latest intelligence</h2>
           </div>
           <span id="video-duration" class="status-badge">About 1 minute</span>
         </div>
 
-        <div id="video-stage" class="video-stage" role="region" tabindex="0" aria-label="Animated cybersecurity news briefing. Use left and right arrows to change stories, or space to play.">
-          <div class="video-grid" aria-hidden="true"></div>
-          <div class="video-scanline" aria-hidden="true"></div>
-          <div class="video-network" aria-hidden="true">
-            <span class="network-core"></span>
-            <span class="network-node node-a"></span>
-            <span class="network-node node-b"></span>
-            <span class="network-node node-c"></span>
-            <span class="network-line line-a"></span>
-            <span class="network-line line-b"></span>
-            <span class="network-line line-c"></span>
-          </div>
-          <div class="video-slide">
-            <div class="video-slide-meta">
-              <span id="video-number">Story 1 of 1</span>
-              <span id="video-category" class="category-pill">Cybersecurity</span>
-            </div>
-            <h3 id="video-story-title">Preparing today’s briefing…</h3>
-            <p id="video-caption">Each story becomes a clear visual explainer with the key risk and why it matters.</p>
-            <div id="video-action" class="video-action"><strong>Recommended action</strong><span>Review the briefing.</span></div>
-          </div>
-          <aside class="video-visual" aria-label="Story risk details">
-            <div class="cartoon-scene" aria-hidden="true">
-              <div class="cartoon-cloud cloud-a"></div>
-              <div class="cartoon-cloud cloud-b"></div>
-              <div class="cartoon-newsboard">
-                <span id="cartoon-badge">CYBER NEWS</span>
-                <strong id="cartoon-impact">HIGH</strong>
-              </div>
-              <div class="cartoon-speech"><span id="cartoon-kicker">WHAT HAPPENED</span><strong id="cartoon-message">The story is being prepared.</strong></div>
-              <div class="cartoon-host">
-                <span class="host-ear"></span>
-                <span class="host-head"><i class="host-eye"></i><i class="host-mouth"></i></span>
-                <span class="host-neck"></span>
-                <span class="host-body"><i></i></span>
-                <span class="host-arm"></span>
-              </div>
-              <div class="cartoon-desk"></div>
-            </div>
-            <div class="story-chapters" aria-label="Storytelling chapters">
-              <button class="active" type="button" data-chapter="0">1 <b>What happened</b></button>
-              <button type="button" data-chapter="1">2 <b>Why it matters</b></button>
-              <button type="button" data-chapter="2">3 <b>What to do</b></button>
-            </div>
-            <dl>
-              <div><dt>Region</dt><dd id="video-region">Global</dd></div>
-              <div><dt>Source</dt><dd id="video-source">Advisory feed</dd></div>
-            </dl>
-          </aside>
-          <div class="video-controls-overlay">
-            <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play briefing</button>
-            <button id="video-mute" class="video-icon-button voice-toggle" type="button" aria-label="Enable optional narration" aria-pressed="false">🔇 Voice off</button>
-          </div>
+        <div id="video-stage" class="video-stage whiteboard-stage" role="region" tabindex="0" aria-label="Text-free whiteboard animation. Use left and right arrows to change stories, or space to play.">
+          <svg id="whiteboard-art" class="whiteboard-art" viewBox="0 0 1200 520" role="img" aria-label="A hand-drawn cyber incident story">
+            <rect class="board-paper" x="5" y="5" width="1190" height="510" rx="24"></rect>
+            <path class="board-ground" d="M80 430 C260 421 365 438 545 428 S865 435 1120 426"></path>
+            <g class="board-phase is-active" data-phase="0">
+              <g class="whiteboard-ink device-drawing">
+                <path d="M145 165 Q145 150 162 150 H405 Q420 150 420 166 V340 Q420 353 405 353 H162 Q145 353 145 340 Z"></path>
+                <path class="ink-blue" d="M165 172 H400 V326 H165 Z"></path>
+                <path d="M118 360 Q282 377 447 360 L420 395 Q282 408 145 395 Z"></path>
+                <circle class="ink-blue" cx="282" cy="249" r="37"></circle>
+                <path class="ink-red" d="M282 225 V253 M282 270 V272"></path>
+                <path class="ink-red" d="M241 204 L226 193 M322 204 L337 193 M233 287 L217 297 M331 287 L347 297"></path>
+              </g>
+              <g class="whiteboard-ink">
+                <path class="ink-blue flow-path" d="M448 272 C510 217 544 217 594 258"></path>
+                <path class="ink-blue" d="M576 241 L600 262 L571 272"></path>
+              </g>
+              <g class="issue-vulnerability whiteboard-ink">
+                <path class="ink-red" d="M540 151 L576 91 L612 151 Z"></path>
+                <path class="ink-red" d="M576 112 V130 M576 141 V143"></path>
+              </g>
+              <g class="issue-breach whiteboard-ink">
+                <circle class="ink-red" cx="566" cy="121" r="14"></circle>
+                <circle class="ink-red" cx="602" cy="103" r="9"></circle>
+                <circle class="ink-red" cx="611" cy="143" r="7"></circle>
+              </g>
+              <g class="issue-ransomware whiteboard-ink">
+                <path class="ink-red" d="M559 135 V116 Q559 91 580 91 Q601 91 601 116 V135"></path>
+                <rect class="ink-red" x="548" y="130" width="65" height="48" rx="9"></rect>
+                <circle cx="580" cy="149" r="4" fill="#fffdf7" stroke="none"></circle>
+              </g>
+              <g class="issue-default whiteboard-ink">
+                <path class="ink-red" d="M560 124 Q580 101 600 124 V153 Q580 172 560 153 Z"></path>
+                <path class="ink-red" d="M560 125 L546 112 M600 125 L614 112 M558 150 L544 162 M602 150 L616 162"></path>
+                <circle cx="573" cy="135" r="3" fill="#c94b45" stroke="none"></circle>
+                <circle cx="588" cy="135" r="3" fill="#c94b45" stroke="none"></circle>
+              </g>
+            </g>
+            <g class="board-phase" data-phase="1">
+              <g class="whiteboard-ink device-drawing">
+                <path d="M145 165 Q145 150 162 150 H405 Q420 150 420 166 V340 Q420 353 405 353 H162 Q145 353 145 340 Z"></path>
+                <path class="ink-blue" d="M165 172 H400 V326 H165 Z"></path>
+                <path d="M118 360 Q282 377 447 360 L420 395 Q282 408 145 395 Z"></path>
+              </g>
+              <g class="whiteboard-ink">
+                <path class="ink-blue flow-path" d="M446 273 C494 228 516 223 555 246"></path>
+                <path class="ink-blue" d="M535 226 L562 251 L530 259"></path>
+                <path class="ink-red" d="M469 244 L483 258 M483 244 L469 258"></path>
+                <path class="ink-red" d="M494 283 L508 297 M508 283 L494 297"></path>
+                <path d="M585 160 Q585 146 600 146 H735 Q750 146 750 160 V365 Q750 379 735 379 H600 Q585 379 585 365 Z"></path>
+                <path class="ink-blue" d="M603 177 H732 V231 H603 Z M603 250 H732 V304 H603 Z M603 323 H732 V351 H603 Z"></path>
+                <circle cx="622" cy="203" r="6" fill="#4389bd" stroke="none"></circle>
+                <circle class="ink-red" cx="622" cy="276" r="8"></circle>
+                <circle cx="622" cy="337" r="6" fill="#4389bd" stroke="none"></circle>
+                <path class="ink-red" d="M650 276 H714 M650 337 H700"></path>
+                <path class="ink-red" d="M770 207 Q803 229 770 251 M790 185 Q840 229 790 273"></path>
+              </g>
+              <g class="issue-vulnerability whiteboard-ink">
+                <path class="ink-red" d="M826 147 L859 91 L892 147 Z"></path>
+                <path class="ink-red" d="M859 111 V127 M859 138 V140"></path>
+              </g>
+              <g class="issue-breach whiteboard-ink">
+                <circle class="ink-red" cx="842" cy="123" r="14"></circle>
+                <circle class="ink-red" cx="878" cy="104" r="9"></circle>
+                <circle class="ink-red" cx="886" cy="145" r="7"></circle>
+              </g>
+              <g class="issue-ransomware whiteboard-ink">
+                <path class="ink-red" d="M838 137 V119 Q838 94 859 94 Q880 94 880 119 V137"></path>
+                <rect class="ink-red" x="827" y="132" width="65" height="48" rx="9"></rect>
+                <circle cx="859" cy="151" r="4" fill="#fffdf7" stroke="none"></circle>
+              </g>
+              <g class="issue-default whiteboard-ink">
+                <path class="ink-red" d="M839 126 Q859 103 879 126 V155 Q859 174 839 155 Z"></path>
+                <path class="ink-red" d="M839 127 L825 114 M879 127 L893 114 M837 152 L823 164 M881 152 L895 164"></path>
+                <circle cx="852" cy="137" r="3" fill="#c94b45" stroke="none"></circle>
+                <circle cx="867" cy="137" r="3" fill="#c94b45" stroke="none"></circle>
+              </g>
+            </g>
+            <g class="board-phase" data-phase="2">
+              <g class="whiteboard-ink device-drawing">
+                <path d="M145 165 Q145 150 162 150 H405 Q420 150 420 166 V340 Q420 353 405 353 H162 Q145 353 145 340 Z"></path>
+                <path class="ink-blue" d="M165 172 H400 V326 H165 Z"></path>
+                <path d="M118 360 Q282 377 447 360 L420 395 Q282 408 145 395 Z"></path>
+              </g>
+              <g class="whiteboard-ink">
+                <path class="ink-blue flow-path" d="M448 272 C510 217 544 217 594 258"></path>
+                <path class="ink-blue" d="M576 241 L600 262 L571 272"></path>
+                <path d="M620 160 Q620 146 635 146 H770 Q785 146 785 160 V365 Q785 379 770 379 H635 Q620 379 620 365 Z"></path>
+                <path class="ink-blue" d="M638 177 H767 V231 H638 Z M638 250 H767 V304 H638 Z M638 323 H767 V351 H638 Z"></path>
+                <circle cx="657" cy="203" r="6" fill="#4389bd" stroke="none"></circle>
+                <circle cx="657" cy="276" r="6" fill="#4389bd" stroke="none"></circle>
+                <circle cx="657" cy="337" r="6" fill="#4389bd" stroke="none"></circle>
+              </g>
+              <g class="whiteboard-ink">
+                <path class="ink-green" d="M948 162 L1037 196 V271 Q1037 350 948 394 Q859 350 859 271 V196 Z"></path>
+                <path class="ink-green" d="M914 272 L938 297 L987 241"></path>
+                <path class="ink-blue" d="M820 270 C837 251 842 243 859 243"></path>
+                <path class="ink-blue" d="M843 228 L860 243 L840 255"></path>
+              </g>
+            </g>
+          </svg>
         </div>
 
-        <div class="video-timeline">
-          <button id="video-prev" class="video-icon-button" type="button" aria-label="Previous story">←</button>
-          <div class="video-progress-track" aria-label="Briefing progress"><span id="video-progress"></span></div>
-          <span id="video-slide-counter">0 / 0</span>
-          <button id="video-next" class="video-icon-button" type="button" aria-label="Next story">→</button>
+        <div class="story-chapters" aria-label="Animation chapters">
+          <button class="active" type="button" data-chapter="0" aria-pressed="true">1 <b>Incident</b></button>
+          <button type="button" data-chapter="1" aria-pressed="false">2 <b>Impact</b></button>
+          <button type="button" data-chapter="2" aria-pressed="false">3 <b>Response</b></button>
+        </div>
+        <div class="video-player-controls">
+          <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play animation</button>
+          <button id="video-mute" class="video-icon-button voice-toggle" type="button" aria-label="Enable optional narration" aria-pressed="false">🔇 Voice off</button>
+          <div class="video-timeline">
+            <button id="video-prev" class="video-icon-button" type="button" aria-label="Previous story">←</button>
+            <div class="video-progress-track" aria-label="Briefing progress"><span id="video-progress"></span></div>
+            <span id="video-slide-counter">0 / 0</span>
+            <button id="video-next" class="video-icon-button" type="button" aria-label="Next story">→</button>
+          </div>
+        </div>
+        <div class="sr-only">
+          <span id="video-number"></span>
+          <span id="video-category"></span>
+          <h3 id="video-story-title">Preparing today’s briefing…</h3>
+          <p id="video-caption"></p>
+          <div id="video-action"></div>
+          <span id="video-region"></span>
+          <span id="video-source"></span>
+          <span id="cartoon-badge"></span>
+          <span id="cartoon-impact"></span>
+          <span id="cartoon-kicker" aria-live="polite"></span>
+          <span id="cartoon-message" aria-live="polite"></span>
         </div>
       </section>
 
@@ -339,6 +409,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119k"></script>
+    <script src="script.js?v=20261119l"></script>
   </body>
 </html>
