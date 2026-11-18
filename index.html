@@ -12,7 +12,7 @@
     <meta property="og:description" content="A concise five-minute global cybersecurity briefing." />
     <meta property="og:type" content="website" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261119b" />
+    <link rel="stylesheet" href="style.css?v=20261119c" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -29,6 +29,15 @@
           <a href="#sources">Sources</a>
         </div>
       </nav>
+
+      <section id="urgent-banner" class="urgent-banner" aria-label="Priority advisory">
+        <div class="urgent-icon" aria-hidden="true">!</div>
+        <div class="urgent-copy">
+          <span class="urgent-label">Priority watch</span>
+          <strong id="urgent-title">Scanning the latest advisory landscape…</strong>
+        </div>
+        <button id="urgent-jump" class="urgent-action" type="button">View brief</button>
+      </section>
 
       <header class="hero">
         <div class="hero-copy">
@@ -58,8 +67,8 @@
               <strong id="source-count">0</strong>
             </div>
             <div class="metric">
-              <span>Highest risk</span>
-              <strong id="risk-level">High</strong>
+              <span>High-impact alerts</span>
+              <strong id="high-impact-count">0</strong>
             </div>
             <div class="metric">
               <span>Read time</span>
@@ -118,6 +127,9 @@
                 <option value="title">Title A–Z</option>
               </select>
             </label>
+            <button id="saved-toggle" class="tool-button" type="button" aria-pressed="false">Saved <span id="saved-count">0</span></button>
+            <button id="compact-toggle" class="tool-button" type="button" aria-pressed="false">Compact</button>
+            <button id="print-brief" class="tool-button" type="button">Print / PDF</button>
           </div>
         </div>
         <p id="result-count" class="result-count" aria-live="polite"></p>
@@ -146,6 +158,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261119b"></script>
+    <script src="script.js?v=20261119c"></script>
   </body>
 </html>

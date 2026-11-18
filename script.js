@@ -251,6 +251,16 @@ let sortMode = 'featured';
 let refreshTimer = null;
 let lastRefreshTime = null;
 let sourcesExpanded = false;
+let savedOnly = false;
+let compactMode = false;
+let savedStoryIds = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cyber-pulse-saved') || '[]');
+    return new Set(Array.isArray(saved) ? saved : []);
+  } catch {
+    return new Set();
+  }
+})();
 
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
@@ -386,7 +396,13 @@ function renderHeader() {
   document.getElementById('story-count').textContent = stories.length;
   document.getElementById('source-count').textContent = ADVISORY_SOURCES.length;
   document.getElementById('last-refresh').textContent = formatTime(lastRefreshTime) + ' IST';
-  document.getElementById('risk-level').textContent = stories.some((story) => story.impact === 'High') ? 'High' : 'Medium';
+  const highImpactCount = stories.filter((story) => story.impact === 'High').length;
+  const highImpact = document.getElementById('high-impact-count');
+  if (highImpact) highImpact.textContent = highImpactCount;
+  const urgentStory = stories.find((story) => story.impact === 'High') || stories[0];
+  if (urgentStory) {
+    document.getElementById('urgent-title').textContent = urgentStory.title;
+  }
   document.getElementById('digest-title').textContent = 'Today’s 5-minute summary';
   document.getElementById('digest-summary').textContent =
     `This briefing refreshes hourly across ${ADVISORY_SOURCES.length} trusted advisory sources worldwide.`;
@@ -416,6 +432,10 @@ function getVisibleStories() {
     );
   }
 
+  if (savedOnly) {
+    visible = visible.filter((story) => savedStoryIds.has(getStoryId(story)));
+  }
+
   if (sortMode === 'high-risk') {
     const rank = { High: 0, Medium: 1, Low: 2 };
     visible.sort((a, b) => (rank[a.impact] ?? 3) - (rank[b.impact] ?? 3));
@@ -440,14 +460,23 @@ function renderNews() {
   }
 
   list.innerHTML = visibleStories
-    .map((story) => `
-        <article class="news-card">
+    .map((story) => {
+      const storyId = getStoryId(story);
+      const isSaved = savedStoryIds.has(storyId);
+      const cves = [...new Set(cveMatches(`${story.title} ${story.summary}`))];
+      const priority = story.impact === 'High' ? 'Immediate action' : story.impact === 'Medium' ? 'Scheduled review' : 'Monitor';
+      return `
+        <article class="news-card" data-story-id="${escapeHtml(storyId)}">
           <div class="news-top">
             <div class="news-meta">
               <span class="category-pill">${escapeHtml(story.category)}</span>
               <span class="source">${escapeHtml(story.region)} • ${escapeHtml(story.source)}</span>
+              ${cves.length ? `<span class="cve-pill">${escapeHtml(cves.slice(0, 2).join(', '))}</span>` : ''}
             </div>
-            <span class="${escapeHtml(story.riskClass)}">${escapeHtml(story.impact)} impact</span>
+            <div class="card-actions">
+              <span class="priority-label ${story.riskClass}">${priority}</span>
+              <button class="save-story" type="button" data-save-id="${escapeHtml(storyId)}" aria-pressed="${isSaved}">${isSaved ? 'Saved' : 'Save'}</button>
+            </div>
           </div>
           <h3>${escapeHtml(story.title)}</h3>
           <p class="summary-text">${escapeHtml(story.summary)}</p>
@@ -457,13 +486,14 @@ function renderNews() {
               <span>${escapeHtml(story.whyItMatters)}</span>
             </div>
             <div class="story-box">
-              <strong>What to watch</strong>
+              <strong>Recommended action</strong>
               <span>${escapeHtml(story.takeaway)}</span>
             </div>
           </div>
-          <a class="read-more-link" href="${safeLink(story.referenceLink)}" target="_blank" rel="noopener noreferrer">Read the full report ↗</a>
+          <a class="read-more-link" href="${safeLink(story.referenceLink)}" target="_blank" rel="noopener noreferrer">Open primary source ↗</a>
         </article>
-      `)
+      `;
+    })
     .join('');
 }
 
@@ -579,6 +609,47 @@ async function init() {
     });
   }
 
+  const savedToggle = document.getElementById('saved-toggle');
+  if (savedToggle) {
+    savedToggle.addEventListener('click', () => {
+      savedOnly = !savedOnly;
+      savedToggle.setAttribute('aria-pressed', String(savedOnly));
+      savedToggle.classList.toggle('active', savedOnly);
+      renderNews();
+    });
+  }
+
+  const compactToggle = document.getElementById('compact-toggle');
+  if (compactToggle) {
+    compactToggle.addEventListener('click', () => {
+      compactMode = !compactMode;
+      compactToggle.setAttribute('aria-pressed', String(compactMode));
+      compactToggle.classList.toggle('active', compactMode);
+      document.getElementById('news-list').classList.toggle('compact-view', compactMode);
+    });
+  }
+
+  document.getElementById('print-brief')?.addEventListener('click', () => window.print());
+
+  document.getElementById('urgent-jump')?.addEventListener('click', () => {
+    document.getElementById('briefing').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('news-list').addEventListener('click', (event) => {
+    const saveButton = event.target.closest('[data-save-id]');
+    if (!saveButton) return;
+
+    const storyId = saveButton.dataset.saveId;
+    if (savedStoryIds.has(storyId)) savedStoryIds.delete(storyId);
+    else savedStoryIds.add(storyId);
+
+    localStorage.setItem('cyber-pulse-saved', JSON.stringify([...savedStoryIds]));
+    document.getElementById('saved-count').textContent = String(savedStoryIds.size);
+    renderNews();
+  });
+
+  document.getElementById('saved-count').textContent = String(savedStoryIds.size);
+
   const toggle = document.getElementById('toggle-sources');
   if (toggle) {
     toggle.addEventListener('click', toggleSources);
@@ -603,4 +674,12 @@ function safeLink(value) {
   } catch {
     return 'https://thehackernews.com/';
   }
+}
+
+function getStoryId(story) {
+  return `${story.title}|${story.source}`;
+}
+
+function cveMatches(value) {
+  return String(value || '').match(/CVE-\d{4}-\d{4,7}/gi) || [];
 }
