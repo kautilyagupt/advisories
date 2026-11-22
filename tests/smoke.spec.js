@@ -130,7 +130,7 @@ test('narration explains the story impact and tailored response', async ({ page 
     takeaway: 'Restore from verified backups and follow downtime procedures.'
   }, 'hospital'));
   expect(chapters.map((chapter) => chapter.kicker)).toEqual(['WHAT HAPPENED', 'WHY IT MATTERS', 'WHAT TO DO']);
-  expect(chapters[0].narration).toContain('healthcare');
+  expect(chapters[0].narration).toContain('hospital’s digital systems');
   expect(chapters[1].narration).toContain('clinical care');
   expect(chapters[2].narration).toContain('verified backups');
   expect(chapters[0].narration).not.toBe('Ransomware attacks hospital systems');
@@ -159,4 +159,84 @@ test('AI prompt-theft stories are not misclassified from an industrial source me
     action: 'Check whether sensitive prompts or secrets were sent to affected providers, rotate exposed credentials, and verify provider access controls.'
   });
   expect(result.summary).not.toContain('stolen requests w');
+});
+
+test('narration captions follow chapters outside the text-free drawing', async ({ page }) => {
+  const captions = page.locator('#video-caption-live');
+  await expect(captions).toBeVisible();
+  await expect(page.locator('#whiteboard-art text')).toHaveCount(0);
+  await expect(captions).toContainText(await page.locator('#cartoon-message').textContent());
+
+  await page.locator('[data-chapter="1"]').click();
+  await expect(page.locator('.board-phase.is-active')).toHaveAttribute('data-phase', '1');
+  await expect(captions).toContainText(await page.locator('#cartoon-message').textContent());
+  await expect(page.locator('#video-progress-track')).toHaveAttribute('role', 'progressbar');
+  await expect(page.locator('#video-progress-track')).not.toHaveAttribute('aria-valuenow', '0');
+
+  await page.locator('#video-captions-toggle').click();
+  await expect(captions).toBeHidden();
+  await expect(page.locator('#video-captions-toggle')).toHaveAttribute('aria-pressed', 'false');
+  await page.locator('#video-captions-toggle').click();
+  await expect(captions).toBeVisible();
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.locator('[data-chapter="2"]').click();
+  await expect(page.locator('.board-phase.is-active')).toHaveAttribute('data-phase', '2');
+  await expect(page.locator('.board-phase.is-active .board-pencil')).toHaveCSS('display', 'none');
+});
+
+test('story-matched drawings hold across 24 chapter reviews', async ({ page }) => {
+  const reviews = await page.evaluate(() => {
+    const stories = [
+      { title: 'Prompt data stolen at AI providers', summary: 'Attackers stole data from AI inference providers for months.', category: 'Data Breach' },
+      { title: 'Router remote management vulnerability', summary: 'A flaw in router software is being exploited.', category: 'Vulnerability' },
+      { title: 'Ransomware disrupts hospital systems', summary: 'Attackers encrypted clinical systems and interrupted care.', category: 'Ransomware' },
+      { title: 'Phishing campaign targets employee accounts', summary: 'Messages impersonate a trusted service to steal sign-in details.', category: 'Phishing' },
+      { title: 'Chrome zero-day exploited in attacks', summary: 'A browser flaw is being used to compromise devices.', category: 'Vulnerability' },
+      { title: 'Compromised open-source package', summary: 'A malicious dependency affects downstream software.', category: 'Supply Chain' },
+      { title: 'Cloud secret leaked from production', summary: 'An exposed cloud key allowed unauthorized access.', category: 'Cloud Security' },
+      { title: 'Factory network intrusion reported', summary: 'A cyber incident affected an industrial control network.', category: 'OT Security' }
+    ];
+    const results = [];
+    for (const story of stories) {
+      videoBrief.stories = [story];
+      videoBrief.index = 0;
+      renderVideoSlide();
+      const scene = getWhiteboardSceneType(story);
+      const issue = getWhiteboardIssueType(story, scene);
+      const response = getWhiteboardResponseType(scene, issue);
+      for (let phaseIndex = 0; phaseIndex < 3; phaseIndex += 1) {
+        showCartoonChapter(phaseIndex);
+        const phase = document.querySelector('.board-phase.is-active');
+        const chapter = videoBrief.chapters[phaseIndex];
+        results.push({
+          phase: phase.getAttribute('data-phase'),
+          subject: phase.querySelector('.subject-icon').getAttribute('href'),
+          issue: phase.querySelector('.incident-symbol')?.getAttribute('href') || null,
+          response: phase.querySelector('.response-symbol')?.getAttribute('href') || null,
+          expectedScene: scene,
+          expectedIssue: phaseIndex < 2 ? `#issue-${issue}` : null,
+          expectedResponse: phaseIndex === 2 ? `#response-${response}` : null,
+          captionMatches: document.getElementById('video-caption-live').textContent.includes(chapter.text),
+          textFree: document.querySelectorAll('#whiteboard-art text').length === 0,
+          drawSteps: [...phase.querySelectorAll('[data-draw-step]')].map((element) => element.dataset.drawStep)
+        });
+      }
+    }
+    return results;
+  });
+
+  expect(reviews).toHaveLength(24);
+  for (const [index, review] of reviews.entries()) {
+    const phase = index % 3;
+    expect(review.phase).toBe(String(phase));
+    expect(review.subject).toBe(`#subject-${review.expectedScene}`);
+    expect(review.issue).toBe(review.expectedIssue);
+    expect(review.response).toBe(review.expectedResponse);
+    expect(review.captionMatches).toBe(true);
+    expect(review.textFree).toBe(true);
+    expect(review.drawSteps).toContain('0');
+    expect(review.drawSteps).toContain('1');
+    expect(review.drawSteps).toContain('2');
+  }
 });

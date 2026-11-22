@@ -302,6 +302,7 @@ let videoBrief = {
   voiceEnabled: true,
   narrationToken: 0,
   chapterTimer: null,
+  pencilTimer: null,
   chapterIndex: 0,
   chapters: [],
   currentStory: null
@@ -1033,6 +1034,16 @@ async function init() {
     }
   });
 
+  const captionsButton = document.getElementById('video-captions-toggle');
+  captionsButton?.addEventListener('click', () => {
+    const captions = document.getElementById('video-caption-live');
+    const captionsEnabled = captionsButton.getAttribute('aria-pressed') !== 'true';
+    captions.hidden = !captionsEnabled;
+    captionsButton.setAttribute('aria-pressed', String(captionsEnabled));
+    captionsButton.setAttribute('aria-label', `Turn narration captions ${captionsEnabled ? 'off' : 'on'}`);
+    captionsButton.textContent = captionsEnabled ? 'CC Captions on' : 'CC Captions off';
+  });
+
   document.getElementById('video-prev')?.addEventListener('click', () => {
     videoBrief.index = Math.max(0, videoBrief.index - 1);
     renderVideoSlide();
@@ -1352,8 +1363,10 @@ function showCartoonChapter(index) {
   const chapter = videoBrief.chapters[index];
   if (!chapter) return;
   if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
+  if (videoBrief.pencilTimer) clearTimeout(videoBrief.pencilTimer);
   stopNarration();
   videoBrief.chapterIndex = index;
+  document.querySelectorAll('.board-pencil').forEach((pencil) => pencil.setAttribute('visibility', 'hidden'));
   document.querySelectorAll('.board-phase').forEach((phase, phaseIndex) => {
     const active = phaseIndex === index;
     phase.classList.toggle('is-active', active);
@@ -1361,6 +1374,16 @@ function showCartoonChapter(index) {
     if (active) {
       void phase.getBoundingClientRect();
       phase.classList.add('draw-in');
+      const pencil = phase.querySelector('.board-pencil');
+      const motion = pencil?.querySelector('animateMotion');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (pencil && motion && !reducedMotion && typeof motion.beginElement === 'function') {
+        videoBrief.pencilTimer = setTimeout(() => {
+          pencil.setAttribute('visibility', 'visible');
+          motion.beginElement();
+          videoBrief.pencilTimer = setTimeout(() => pencil.setAttribute('visibility', 'hidden'), 1800);
+        }, 650);
+      }
     }
   });
   document.querySelectorAll('.story-chapters button').forEach((item, itemIndex) => {
@@ -1369,6 +1392,17 @@ function showCartoonChapter(index) {
   });
   document.getElementById('cartoon-kicker').textContent = chapter.kicker;
   document.getElementById('cartoon-message').textContent = chapter.text;
+  document.getElementById('video-caption-live').textContent = chapter.narration;
+  const chapterCount = videoBrief.chapters.length;
+  const storiesToShow = videoBrief.stories.length;
+  const progress = storiesToShow
+    ? ((videoBrief.index + (index + 1) / chapterCount) / storiesToShow) * 100
+    : 0;
+  const progressTrack = document.getElementById('video-progress-track');
+  progressTrack.setAttribute('aria-valuenow', String(Math.round(progress)));
+  document.getElementById('video-progress').style.width = `${progress}%`;
+  document.getElementById('video-slide-counter').textContent =
+    `${videoBrief.index + 1} / ${storiesToShow} · Scene ${index + 1} / ${chapterCount}`;
   if (videoBrief.playing) {
     if (videoBrief.voiceEnabled) speakCurrentChapter();
     else scheduleChapterAdvance();
@@ -1377,18 +1411,18 @@ function showCartoonChapter(index) {
 
 function getNarrationLead(sceneType) {
   const leads = {
-    hospital: 'In healthcare, a cyber incident can interrupt the systems staff rely on to care for patients.',
-    browser: 'A web browser is a common doorway from the internet onto work devices.',
-    policy: 'A change in cyber rules can affect how quickly organizations must report an incident.',
-    mobile: 'Mobile providers hold account and contact details that can be misused to impersonate customers.',
-    network: 'Routers and remote management services connect many devices to one another and to the internet.',
-    package: 'Modern software depends on packages that flow through a shared supply chain.',
-    ai: 'AI services process prompts and request data that may contain private information.',
-    identity: 'A compromised account can make an attacker appear to be a legitimate user.',
-    cloud: 'Cloud services connect applications, data, and credentials across an organization.',
-    ot: 'Industrial control systems keep real-world operations running.',
-    server: 'A server compromise can put many connected services at risk.',
-    laptop: 'A security incident on one connected system can create risk for the wider organization.'
+    hospital: 'Think about all the care that depends on a hospital’s digital systems.',
+    browser: 'A browser is more than a window; it’s a path into your device.',
+    policy: 'Reporting rules set the clock for a response.',
+    mobile: 'A phone number can become a key to someone’s account.',
+    network: 'A router sits between the internet and the devices behind it.',
+    package: 'One software dependency can reach every product that includes it.',
+    ai: 'An AI prompt can hold much more than a question: private chats, code, or credentials.',
+    identity: 'A stolen session can look exactly like the real user.',
+    cloud: 'One cloud secret can open more doors than expected.',
+    ot: 'At a factory, a computer incident can affect physical operations.',
+    server: 'A shared server can put many services at risk.',
+    laptop: 'One connected system can create risk for a much wider organization.'
   };
   return leads[sceneType] || leads.laptop;
 }
@@ -1470,19 +1504,19 @@ function buildCartoonChapters(story, sceneType) {
     server: 'A weakness on a shared server can expose the services and data that depend on it.'
   }[sceneType] || 'The impact depends on which systems are affected and how quickly they can be contained.';
   const responseLead = {
-    hospital: 'Keep patient-care workflows safe, then restore from backups that have been verified.',
-    browser: 'Prioritize the fixed browser version and verify that managed devices have updated.',
-    policy: 'Assign an owner to verify the deadline, reporting path, and evidence requirements.',
-    mobile: 'Protect affected accounts, warn users about impersonation, and watch for account changes.',
-    network: 'Restrict remote management, patch routers, and verify that connected devices are clean.',
-    package: 'Isolate the affected dependency, check where it was used, and rotate exposed credentials.',
+    hospital: 'People come first, so coordinate with the clinical team before restoring services.',
+    browser: 'An update only helps when it reaches every managed device.',
+    policy: 'The risk here is missing the reporting window.',
+    mobile: 'If a phone number is exposed, accounts tied to it may be next.',
+    network: 'The remote-management route needs attention beyond the router itself.',
+    package: 'The same dependency may be bundled into more than one product.',
     ai: issueType === 'breach'
-      ? 'Treat the affected provider as a possible data exposure, check what was sent, and rotate any secrets in those requests.'
-      : 'Limit the agent to necessary tools and require human approval for sensitive actions.',
-    identity: 'Revoke exposed sessions, reset affected credentials, and strengthen sign-in checks.',
-    cloud: 'Rotate exposed secrets and review access logs for unexpected use.',
-    ot: 'Follow the site’s safe isolation and recovery procedures while monitoring essential operations.',
-    server: 'Patch affected systems, verify exposure, and monitor for signs of exploitation.'
+      ? 'Treat prompts as a possible exposure, even when they were never meant to be shared.'
+      : 'An agent should not be able to make a sensitive change without a person checking it.',
+    identity: 'An attacker may still have access even after a password changes.',
+    cloud: 'A secret can open services beyond the one where it was found.',
+    ot: 'Safety procedures matter before any network changes.',
+    server: 'Exposure depends on which versions are actually running.'
   }[sceneType] || 'Verify affected systems, apply the trusted fix, and monitor for signs of misuse.';
   const impactNarration = impactIsGeneric ? impact : `${impactLead} ${impact}`;
   const responseNarration = takeawayIsGeneric ? takeaway : `${responseLead} ${takeaway}`;
@@ -1538,6 +1572,9 @@ function renderVideoSlide() {
   if (!storiesToShow.length) {
     document.getElementById('video-story-title').textContent = 'No stories are available yet';
     document.getElementById('video-caption').textContent = 'Refresh the briefing or change filters to generate a new video brief.';
+    document.getElementById('video-caption-live').textContent = 'Refresh the briefing or change filters to generate a new video brief.';
+    document.getElementById('video-progress-track').setAttribute('aria-valuenow', '0');
+    document.getElementById('video-progress').style.width = '0%';
     return;
   }
   videoBrief.index = Math.max(0, Math.min(videoBrief.index, storiesToShow.length - 1));
@@ -1569,14 +1606,16 @@ function renderVideoSlide() {
   art.querySelectorAll('.incident-symbol').forEach((icon) => icon.setAttribute('href', `#issue-${issueType}`));
   art.querySelectorAll('.response-symbol').forEach((icon) => icon.setAttribute('href', `#response-${responseType}`));
   art.setAttribute('aria-label', `Whiteboard scene showing ${story.category || 'cybersecurity'} affecting ${sceneType} systems, with a ${responseType} response`);
-  document.getElementById('video-slide-counter').textContent = `${videoBrief.index + 1} / ${storiesToShow.length}`;
-  document.getElementById('video-progress').style.width = `${((videoBrief.index + 1) / storiesToShow.length) * 100}%`;
+  document.getElementById('video-slide-counter').textContent =
+    `${videoBrief.index + 1} / ${storiesToShow.length} · Scene 1 / 3`;
   renderCartoonStory(story, sceneType);
 }
 
 function stopVideoBrief() {
   videoBrief.playing = false;
   if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
+  if (videoBrief.pencilTimer) clearTimeout(videoBrief.pencilTimer);
+  document.querySelectorAll('.board-pencil').forEach((pencil) => pencil.setAttribute('visibility', 'hidden'));
   stopNarration();
   document.getElementById('video-stage')?.classList.remove('is-playing');
   document.getElementById('video-play').textContent = '▶ Play briefing';

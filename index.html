@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261123e" />
+    <link rel="stylesheet" href="style.css?v=20261123f" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -222,14 +222,19 @@
               </symbol>
               <symbol id="subject-ai" viewBox="0 0 300 240">
                 <g fill="none" stroke="#24354a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M150 31 V51 M137 31 H163"></path>
-                  <rect x="68" y="52" width="164" height="120" rx="35"></rect>
-                  <circle stroke="#4389bd" cx="119" cy="105" r="12"></circle>
-                  <circle stroke="#4389bd" cx="181" cy="105" r="12"></circle>
-                  <path d="M118 145 Q150 164 182 145 M68 94 H43 V142 H68 M232 94 H257 V142 H232"></path>
-                  <path stroke="#ce554d" d="M42 117 H18 M258 117 H282"></path>
-                  <circle stroke="#4389bd" cx="150" cy="204" r="14"></circle>
-                  <path d="M150 172 V190 M100 204 H136 M164 204 H200"></path>
+                  <path d="M53 109 Q35 108 35 89 Q35 69 57 66 Q65 36 99 42 Q118 16 145 38 Q169 19 190 44 Q222 37 232 67 Q263 69 261 93 Q259 112 239 114"></path>
+                  <rect x="76" y="121" width="148" height="81" rx="10"></rect>
+                  <path stroke="#4389bd" d="M91 137 H209 V161 H91 Z M91 171 H209 V188 H91 Z"></path>
+                  <circle cx="105" cy="149" r="4" fill="#4389bd"></circle>
+                  <circle cx="105" cy="180" r="4" fill="#4a9369"></circle>
+                  <path stroke="#ce554d" d="M151 57 L119 87 M151 57 V91 M151 57 L183 87 M119 87 L137 102 M183 87 L165 102"></path>
+                  <circle cx="151" cy="57" r="8" fill="#fffdf7"></circle>
+                  <circle cx="119" cy="87" r="8" fill="#fffdf7"></circle>
+                  <circle cx="151" cy="91" r="8" fill="#fffdf7"></circle>
+                  <circle cx="183" cy="87" r="8" fill="#fffdf7"></circle>
+                  <circle cx="137" cy="102" r="7" fill="#fffdf7"></circle>
+                  <circle cx="165" cy="102" r="7" fill="#fffdf7"></circle>
+                  <path d="M150 202 V218 H105 M150 218 H195"></path>
                 </g>
               </symbol>
               <symbol id="subject-identity" viewBox="0 0 300 240">
@@ -284,9 +289,10 @@
               </symbol>
               <symbol id="issue-breach" viewBox="0 0 100 100">
                 <g fill="none" stroke="#ce554d" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 27 Q50 8 88 27 V72 Q50 92 12 72 Z M12 27 Q50 46 88 27 M12 49 Q50 68 88 49"></path>
-                  <circle cx="78" cy="84" r="5" fill="#ce554d"></circle>
-                  <circle cx="91" cy="67" r="4" fill="#ce554d"></circle>
+                  <path d="M8 31 Q36 15 64 31 V73 Q36 89 8 73 Z M8 31 Q36 47 64 31 M8 51 Q36 67 64 51"></path>
+                  <path d="M64 45 L88 22 M75 22 H88 V35"></path>
+                  <circle cx="76" cy="61" r="4" fill="#ce554d"></circle>
+                  <circle cx="87" cy="76" r="4" fill="#ce554d"></circle>
                 </g>
               </symbol>
               <symbol id="issue-ransomware" viewBox="0 0 100 100">
@@ -384,38 +390,63 @@
                   <circle cx="60" cy="60" r="5" fill="#4a9369"></circle>
                 </g>
               </symbol>
+              <symbol id="whiteboard-pencil" viewBox="0 0 48 48">
+                <path d="M8 32 L29 11 L39 21 L18 42 L7 44 Z" fill="#f3c36c" stroke="#24354a" stroke-width="3" stroke-linejoin="round"></path>
+                <path d="M7 44 L10 33 M29 11 L34 6 L44 16 L39 21" fill="none" stroke="#24354a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+              </symbol>
+              <path id="pencil-route-0" d="M448 272 C540 224 627 224 719 263"></path>
+              <path id="pencil-route-1" d="M449 273 C520 238 586 238 661 267"></path>
+              <path id="pencil-route-2" d="M448 272 C500 229 541 229 594 258"></path>
             </defs>
             <rect class="board-paper" x="5" y="5" width="1190" height="510" rx="24"></rect>
             <path class="board-ground" d="M80 430 C260 421 365 438 545 428 S865 435 1120 426"></path>
             <g class="board-phase is-active" data-phase="0">
-              <use class="whiteboard-ink subject-icon" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink">
+              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
+              <g class="whiteboard-ink" data-draw-step="1">
                 <path class="ink-blue flow-path" d="M448 272 C540 224 627 224 719 263"></path>
                 <path class="ink-blue" d="M695 240 L724 265 L690 274"></path>
               </g>
-              <use class="whiteboard-ink incident-symbol" href="#issue-default" x="733" y="197" width="112" height="112"></use>
+              <use class="whiteboard-ink incident-symbol" data-draw-step="2" href="#issue-default" x="716" y="177" width="150" height="150"></use>
+              <g class="board-pencil" visibility="hidden" aria-hidden="true">
+                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
+                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
+                  <mpath href="#pencil-route-0"></mpath>
+                </animateMotion>
+              </g>
             </g>
             <g class="board-phase" data-phase="1">
-              <use class="whiteboard-ink subject-icon" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink">
+              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
+              <g class="whiteboard-ink" data-draw-step="1">
                 <path class="ink-red flow-path" d="M449 273 C520 238 586 238 661 267"></path>
                 <path class="ink-red" d="M638 244 L667 269 L633 278 M476 235 L490 249 M490 235 L476 249 M511 285 L525 299 M525 285 L511 299"></path>
                 <path class="ink-red" d="M820 203 Q848 225 820 247 M840 181 Q890 225 840 269"></path>
               </g>
-              <use class="whiteboard-ink incident-symbol impact-symbol" href="#issue-default" x="661" y="191" width="142" height="142"></use>
+              <use class="whiteboard-ink incident-symbol impact-symbol" data-draw-step="2" href="#issue-default" x="647" y="177" width="160" height="160"></use>
+              <g class="board-pencil" visibility="hidden" aria-hidden="true">
+                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
+                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
+                  <mpath href="#pencil-route-1"></mpath>
+                </animateMotion>
+              </g>
             </g>
             <g class="board-phase" data-phase="2">
-              <use class="whiteboard-ink subject-icon" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink">
+              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
+              <g class="whiteboard-ink" data-draw-step="1">
                 <path class="ink-blue flow-path" d="M448 272 C500 229 541 229 594 258"></path>
                 <path class="ink-blue" d="M576 241 L600 262 L571 272"></path>
               </g>
-              <use class="whiteboard-ink response-symbol" href="#response-patch" x="620" y="152" width="175" height="175"></use>
-              <g class="whiteboard-ink">
+              <use class="whiteboard-ink response-symbol" data-draw-step="1" href="#response-patch" x="620" y="152" width="175" height="175"></use>
+              <g class="whiteboard-ink" data-draw-step="2">
                 <path class="ink-green" d="M948 162 L1037 196 V271 Q1037 350 948 394 Q859 350 859 271 V196 Z"></path>
                 <path class="ink-green" d="M914 272 L938 297 L987 241"></path>
                 <path class="ink-blue" d="M820 270 C837 251 842 243 859 243"></path>
                 <path class="ink-blue" d="M843 228 L860 243 L840 255"></path>
+              </g>
+              <g class="board-pencil" visibility="hidden" aria-hidden="true">
+                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
+                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
+                  <mpath href="#pencil-route-2"></mpath>
+                </animateMotion>
               </g>
             </g>
           </svg>
@@ -429,12 +460,17 @@
         <div class="video-player-controls">
           <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play animation</button>
           <button id="video-voice" class="video-icon-button voice-toggle" type="button" aria-label="Turn device voice narration off" aria-pressed="true" title="Uses a voice installed in your browser or device; quality varies.">🔊 Narration on</button>
+          <button id="video-captions-toggle" class="video-icon-button captions-toggle" type="button" aria-label="Turn narration captions off" aria-pressed="true">CC Captions on</button>
           <div class="video-timeline">
             <button id="video-prev" class="video-icon-button" type="button" aria-label="Previous story">←</button>
-            <div class="video-progress-track" aria-label="Briefing progress"><span id="video-progress"></span></div>
+            <div id="video-progress-track" class="video-progress-track" role="progressbar" aria-label="Briefing progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="video-progress"></span></div>
             <span id="video-slide-counter">0 / 0</span>
             <button id="video-next" class="video-icon-button" type="button" aria-label="Next story">→</button>
           </div>
+        </div>
+        <div class="video-caption-panel">
+          <span class="video-caption-label">Narration captions · outside the drawing</span>
+          <p id="video-caption-live" aria-live="polite">Story narration will appear here when the briefing loads.</p>
         </div>
         <p id="video-audio-status" class="video-audio-status" aria-live="polite">Narration follows this story’s incident, impact, and response. Voice quality depends on your device.</p>
         <div class="sr-only">
@@ -565,6 +601,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261123e"></script>
+    <script src="script.js?v=20261123f"></script>
   </body>
 </html>

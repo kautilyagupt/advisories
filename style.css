@@ -2100,21 +2100,22 @@ h1 {
   opacity: 1;
 }
 
-.board-phase.draw-in .whiteboard-ink > * {
+.board-phase.draw-in [data-draw-step],
+.board-phase.draw-in [data-draw-step] > * {
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
-  animation: whiteboard-draw 1.6s ease-out forwards;
+  animation: whiteboard-draw 1.05s ease-out forwards;
 }
 
-.board-phase.draw-in > .whiteboard-ink {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: whiteboard-draw 1.6s ease-out forwards;
+.board-phase.draw-in [data-draw-step="1"],
+.board-phase.draw-in [data-draw-step="1"] > * {
+  animation-delay: 0.65s;
 }
 
-.board-phase.draw-in .whiteboard-ink > :nth-child(2) { animation-delay: 0.15s; }
-.board-phase.draw-in .whiteboard-ink > :nth-child(3) { animation-delay: 0.3s; }
-.board-phase.draw-in .whiteboard-ink > :nth-child(4) { animation-delay: 0.45s; }
+.board-phase.draw-in [data-draw-step="2"],
+.board-phase.draw-in [data-draw-step="2"] > * {
+  animation-delay: 1.3s;
+}
 
 @keyframes whiteboard-draw {
   to { stroke-dashoffset: 0; }
@@ -2122,7 +2123,7 @@ h1 {
 
 .video-player-controls {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: auto auto auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
 }
@@ -2141,6 +2142,36 @@ h1 {
   white-space: nowrap;
 }
 
+.video-icon-button.captions-toggle {
+  white-space: nowrap;
+}
+
+.video-caption-panel {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.video-caption-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.video-caption-panel p {
+  max-width: 72ch;
+  margin: 6px 0 0;
+  line-height: 1.55;
+}
+
+.video-caption-panel p[hidden] {
+  display: none;
+}
+
 .story-chapters button {
   min-height: 42px;
 }
@@ -2150,9 +2181,14 @@ h1 {
     grid-template-columns: 1fr auto;
   }
 
-  .video-player-controls .video-timeline {
+  .video-icon-button.captions-toggle {
     grid-column: 1 / -1;
     grid-row: 2;
+  }
+
+  .video-player-controls .video-timeline {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   .video-icon-button.voice-toggle {
@@ -2162,11 +2198,15 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .board-phase,
-  .board-phase.draw-in > .whiteboard-ink,
-  .board-phase.draw-in .whiteboard-ink > * {
+  .board-phase.draw-in [data-draw-step],
+  .board-phase.draw-in [data-draw-step] > * {
     animation: none !important;
     transition: none !important;
     stroke-dashoffset: 0 !important;
+  }
+
+  .board-pencil {
+    display: none !important;
   }
 
   .video-stage.is-playing .flow-path {
@@ -2183,13 +2223,13 @@ h1 {
   }
 
   .video-stage.is-playing .board-phase.is-active .impact-symbol {
-    animation: whiteboard-draw 1.6s ease-out forwards, incident-pulse 1.8s ease-in-out 1.6s infinite;
+    animation: whiteboard-draw 1.05s ease-out 1.3s forwards, incident-pulse 1.8s ease-in-out 2.4s infinite;
     transform-box: fill-box;
     transform-origin: center;
   }
 
   .video-stage.is-playing .board-phase.is-active .response-symbol {
-    animation: whiteboard-draw 1.6s ease-out forwards, response-pulse 2.8s ease-in-out 1.6s infinite;
+    animation: whiteboard-draw 1.05s ease-out 0.65s forwards, response-pulse 2.8s ease-in-out 1.8s infinite;
     transform-box: fill-box;
     transform-origin: center;
   }
