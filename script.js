@@ -302,7 +302,6 @@ let videoBrief = {
   voiceEnabled: true,
   narrationToken: 0,
   chapterTimer: null,
-  pencilTimer: null,
   chapterIndex: 0,
   chapters: [],
   currentStory: null
@@ -1014,7 +1013,7 @@ async function init() {
     voiceButton.textContent = 'Narration unavailable';
     voiceButton.setAttribute('aria-pressed', 'false');
     voiceButton.setAttribute('aria-label', 'Device voice narration is not available in this browser');
-    document.getElementById('video-duration').textContent = 'About 1 minute';
+    document.getElementById('video-duration').textContent = 'One continuous lesson';
     document.getElementById('video-audio-status').textContent = 'This browser does not provide voice narration; the animation remains available silently.';
   }
   voiceButton?.addEventListener('click', () => {
@@ -1022,15 +1021,15 @@ async function init() {
     voiceButton.setAttribute('aria-pressed', String(videoBrief.voiceEnabled));
     voiceButton.setAttribute('aria-label', videoBrief.voiceEnabled ? 'Turn device voice narration off' : 'Turn device voice narration on');
     voiceButton.textContent = videoBrief.voiceEnabled ? '🔊 Narration on' : '🔈 Narration off';
-    document.getElementById('video-duration').textContent = videoBrief.voiceEnabled ? 'Narrated story chapters' : 'About 1 minute';
+    document.getElementById('video-duration').textContent = 'One continuous lesson';
     document.getElementById('video-audio-status').textContent = videoBrief.voiceEnabled
-      ? 'Narration follows this story’s incident, impact, and response. Voice quality depends on your device.'
-      : 'Optional narration explains the incident, its specific impact, and a practical response. Voice quality depends on your device.';
+      ? 'Four instructor-led beats build one scene. Voice quality depends on your device.'
+      : 'The scene builds silently through context, incident, impact, and response.';
     if (videoBrief.voiceEnabled && videoBrief.playing) {
       speakCurrentChapter();
     } else {
       stopNarration();
-      if (videoBrief.playing) scheduleChapterAdvance(4500);
+      if (videoBrief.playing) scheduleChapterAdvance(getChapterDuration());
     }
   });
 
@@ -1317,7 +1316,11 @@ function chooseNarrationVoice() {
 
 function speakCurrentChapter() {
   const chapter = videoBrief.chapters[videoBrief.chapterIndex];
-  if (!chapter || !videoBrief.voiceEnabled || !('speechSynthesis' in window)) return;
+  if (!chapter || !videoBrief.voiceEnabled) return;
+  if (!('speechSynthesis' in window)) {
+    scheduleChapterAdvance(getChapterDuration(chapter));
+    return;
+  }
   stopNarration();
   const token = videoBrief.narrationToken;
   const spokenText = chapter.narration
@@ -1329,7 +1332,7 @@ function speakCurrentChapter() {
   const utterance = new SpeechSynthesisUtterance(spokenText);
   const voice = chooseNarrationVoice();
   if (voice) utterance.voice = voice;
-  utterance.rate = 0.96;
+  utterance.rate = 0.94;
   utterance.pitch = 1;
   utterance.onend = () => {
     if (token !== videoBrief.narrationToken || !videoBrief.playing || !videoBrief.voiceEnabled) return;
@@ -1339,12 +1342,17 @@ function speakCurrentChapter() {
     if (token !== videoBrief.narrationToken) return;
     const status = document.getElementById('video-audio-status');
     status.textContent = 'Device narration failed; the animation will continue silently.';
-    scheduleChapterAdvance(4500);
+    scheduleChapterAdvance(getChapterDuration(chapter));
   };
   window.speechSynthesis.speak(utterance);
 }
 
-function scheduleChapterAdvance(delay = 4500) {
+function getChapterDuration(chapter = videoBrief.chapters[videoBrief.chapterIndex]) {
+  const wordCount = chapter ? chapter.narration.trim().split(/\s+/).length : 0;
+  return Math.max(4500, Math.min(14000, wordCount * 420));
+}
+
+function scheduleChapterAdvance(delay = getChapterDuration()) {
   if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
   if (!videoBrief.playing) return;
   videoBrief.chapterTimer = setTimeout(advanceCartoonChapter, delay);
@@ -1363,27 +1371,31 @@ function showCartoonChapter(index) {
   const chapter = videoBrief.chapters[index];
   if (!chapter) return;
   if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
-  if (videoBrief.pencilTimer) clearTimeout(videoBrief.pencilTimer);
   stopNarration();
   videoBrief.chapterIndex = index;
-  document.querySelectorAll('.board-pencil').forEach((pencil) => pencil.setAttribute('visibility', 'hidden'));
+  const art = document.getElementById('whiteboard-art');
+  art.dataset.focus = String(index);
+  const target = [
+    { x: 330, y: 325 },
+    { x: 540, y: 260 },
+    { x: 750, y: 390 },
+    { x: 990, y: 285 }
+  ][index];
+  if (target) {
+    const targetAngle = Math.atan2(target.y - 270, target.x - 146);
+    const armAngle = Math.atan2(344 - 270, 190 - 146);
+    const rotation = (targetAngle - armAngle) * (180 / Math.PI);
+    document.getElementById('instructor-gesture').setAttribute('transform', `rotate(${rotation.toFixed(1)} 146 270)`);
+  }
   document.querySelectorAll('.board-phase').forEach((phase, phaseIndex) => {
-    const active = phaseIndex === index;
-    phase.classList.toggle('is-active', active);
+    const visible = phaseIndex <= index;
+    const current = phaseIndex === index;
+    phase.classList.toggle('is-active', visible);
+    phase.classList.toggle('is-current', current);
     phase.classList.remove('draw-in');
-    if (active) {
+    if (current) {
       void phase.getBoundingClientRect();
       phase.classList.add('draw-in');
-      const pencil = phase.querySelector('.board-pencil');
-      const motion = pencil?.querySelector('animateMotion');
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (pencil && motion && !reducedMotion && typeof motion.beginElement === 'function') {
-        videoBrief.pencilTimer = setTimeout(() => {
-          pencil.setAttribute('visibility', 'visible');
-          motion.beginElement();
-          videoBrief.pencilTimer = setTimeout(() => pencil.setAttribute('visibility', 'hidden'), 1800);
-        }, 650);
-      }
     }
   });
   document.querySelectorAll('.story-chapters button').forEach((item, itemIndex) => {
@@ -1405,7 +1417,7 @@ function showCartoonChapter(index) {
     `${videoBrief.index + 1} / ${storiesToShow} · Scene ${index + 1} / ${chapterCount}`;
   if (videoBrief.playing) {
     if (videoBrief.voiceEnabled) speakCurrentChapter();
-    else scheduleChapterAdvance();
+    else scheduleChapterAdvance(getChapterDuration(chapter));
   }
 }
 
@@ -1438,6 +1450,24 @@ function getWhiteboardResponseType(sceneType, issueType) {
   if (issueType === 'ransomware') return 'backup';
   if (issueType === 'breach') return 'protect';
   return 'patch';
+}
+
+function getWhiteboardImpactType(sceneType) {
+  const impactTypes = {
+    hospital: 'care',
+    browser: 'device',
+    policy: 'deadline',
+    mobile: 'account',
+    network: 'network',
+    package: 'supply',
+    ai: 'data',
+    identity: 'account',
+    cloud: 'services',
+    ot: 'operations',
+    server: 'services',
+    laptop: 'network'
+  };
+  return impactTypes[sceneType] || impactTypes.laptop;
 }
 
 function completeStorySentence(text) {
@@ -1518,10 +1548,24 @@ function buildCartoonChapters(story, sceneType) {
     ot: 'Safety procedures matter before any network changes.',
     server: 'Exposure depends on which versions are actually running.'
   }[sceneType] || 'Verify affected systems, apply the trusted fix, and monitor for signs of misuse.';
+  const incidentLead = {
+    hospital: 'The disruption begins at the clinical systems.',
+    browser: 'The entry point is the vulnerable browser.',
+    policy: 'This is where the reporting clock begins.',
+    mobile: 'The exposure begins with subscriber information.',
+    network: 'The remote-management route opens the network.',
+    package: 'Trace the incident back to the software dependency.',
+    ai: 'The exposure begins with data sent to the AI provider.',
+    identity: 'The attacker is impersonating a trusted sign-in.',
+    cloud: 'The access path starts with an exposed cloud secret.',
+    ot: 'The incident reaches systems that run physical operations.',
+    server: 'The affected service starts at a shared server.'
+  }[sceneType] || 'Start with the system where the incident was first observed.';
   const impactNarration = impactIsGeneric ? impact : `${impactLead} ${impact}`;
   const responseNarration = takeawayIsGeneric ? takeaway : `${responseLead} ${takeaway}`;
   return [
-    { kicker: 'WHAT HAPPENED', text: summary, narration: `${getNarrationLead(sceneType)} ${summary}` },
+    { kicker: 'THE CONTEXT', text: getNarrationLead(sceneType), narration: getNarrationLead(sceneType) },
+    { kicker: 'THE INCIDENT', text: summary, narration: `${incidentLead} ${summary}` },
     { kicker: 'WHY IT MATTERS', text: impact, narration: impactNarration },
     { kicker: 'WHAT TO DO', text: takeaway, narration: responseNarration }
   ];
@@ -1592,33 +1636,34 @@ function renderVideoSlide() {
   document.getElementById('video-source').textContent = story.source || 'Advisory feed';
   document.getElementById('cartoon-badge').textContent = story.category || 'CYBER NEWS';
   document.getElementById('cartoon-impact').textContent = (story.impact || 'MEDIUM').toUpperCase();
-  document.getElementById('cartoon-kicker').textContent = 'WHAT HAPPENED';
+  document.getElementById('cartoon-kicker').textContent = 'THE CONTEXT';
   document.getElementById('cartoon-message').textContent = story.summary || story.title;
   stage.dataset.impact = (story.impact || 'Medium').toLowerCase();
   const art = document.getElementById('whiteboard-art');
   const sceneType = getWhiteboardSceneType(story);
   const issueType = getWhiteboardIssueType(story, sceneType);
+  const impactType = getWhiteboardImpactType(sceneType);
   const responseType = getWhiteboardResponseType(sceneType, issueType);
   art.dataset.sceneType = sceneType;
   art.dataset.issueType = issueType;
+  art.dataset.impactType = impactType;
   art.dataset.responseType = responseType;
   art.querySelectorAll('.subject-icon').forEach((icon) => icon.setAttribute('href', `#subject-${sceneType}`));
   art.querySelectorAll('.incident-symbol').forEach((icon) => icon.setAttribute('href', `#issue-${issueType}`));
+  art.querySelectorAll('.impact-symbol').forEach((icon) => icon.setAttribute('href', `#impact-${impactType}`));
   art.querySelectorAll('.response-symbol').forEach((icon) => icon.setAttribute('href', `#response-${responseType}`));
-  art.setAttribute('aria-label', `Whiteboard scene showing ${story.category || 'cybersecurity'} affecting ${sceneType} systems, with a ${responseType} response`);
+  art.setAttribute('aria-label', `Instructor-led whiteboard story about ${story.category || 'cybersecurity'} affecting ${sceneType} systems, with ${impactType} consequences and a ${responseType} response`);
   document.getElementById('video-slide-counter').textContent =
-    `${videoBrief.index + 1} / ${storiesToShow.length} · Scene 1 / 3`;
+    `${videoBrief.index + 1} / ${storiesToShow.length} · Beat 1 / 4`;
   renderCartoonStory(story, sceneType);
 }
 
 function stopVideoBrief() {
   videoBrief.playing = false;
   if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
-  if (videoBrief.pencilTimer) clearTimeout(videoBrief.pencilTimer);
-  document.querySelectorAll('.board-pencil').forEach((pencil) => pencil.setAttribute('visibility', 'hidden'));
   stopNarration();
   document.getElementById('video-stage')?.classList.remove('is-playing');
-  document.getElementById('video-play').textContent = '▶ Play briefing';
+  document.getElementById('video-play').textContent = '▶ Play lesson';
 }
 
 function nextVideoSlide() {
@@ -1627,7 +1672,7 @@ function nextVideoSlide() {
     renderVideoSlide();
   } else if (videoBrief.playing) {
     stopVideoBrief();
-    document.getElementById('video-play').textContent = '↻ Replay briefing';
+    document.getElementById('video-play').textContent = '↻ Replay lesson';
   }
 }
 
@@ -1642,5 +1687,5 @@ function startVideoBrief() {
   if (videoBrief.index >= videoBrief.stories.length) videoBrief.index = 0;
   renderVideoSlide();
   document.getElementById('video-stage')?.classList.add('is-playing');
-  document.getElementById('video-play').textContent = 'Ⅱ Pause briefing';
+  document.getElementById('video-play').textContent = 'Ⅱ Pause lesson';
 }

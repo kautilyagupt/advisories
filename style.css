@@ -1242,7 +1242,7 @@ h1 {
 .story-chapters {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
 }
 
@@ -2057,6 +2057,7 @@ h1 {
   border-radius: 16px;
   background: #fffdf7;
   box-shadow: 0 12px 32px rgba(2, 8, 23, 0.18);
+  aspect-ratio: 16 / 9;
 }
 
 .whiteboard-art {
@@ -2068,28 +2069,109 @@ h1 {
 
 .board-paper {
   fill: #fffdf7;
-  stroke: #e8e1d3;
-  stroke-width: 6;
+  stroke: #e5dfd3;
+  stroke-width: 3;
 }
 
 .board-ground {
   fill: none;
-  stroke: #e4dccb;
-  stroke-width: 4;
+  stroke: #d7d1c5;
+  stroke-width: 2;
   stroke-linecap: round;
+}
+
+.board-route {
+  fill: none;
+  stroke: #ded8cb;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.board-overview {
+  opacity: 0.2;
 }
 
 .whiteboard-ink {
   fill: none;
   stroke: #24354a;
-  stroke-width: 8;
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.whiteboard-ink .ink-blue { stroke: #4389bd; }
-.whiteboard-ink .ink-red { stroke: #ce554d; }
-.whiteboard-ink .ink-green { stroke: #4a9369; }
+#whiteboard-art symbol > g {
+  stroke-width: 5 !important;
+}
+
+.whiteboard-art .ink-blue { stroke: #557f9c; }
+.whiteboard-art .ink-red,
+.whiteboard-art .ink-break { stroke: #bd6255; }
+.whiteboard-art .ink-green { stroke: #4f806b; }
+
+.guide-jacket {
+  fill: #f1eee5;
+  stroke: #33475b;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.guide-trousers {
+  fill: #e9e5db;
+  stroke: #33475b;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.guide-head {
+  fill: #f4f1e9;
+  stroke: #33475b;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.guide-hair {
+  fill: #35485a;
+  stroke: #35485a;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.guide-detail,
+.guide-arm {
+  fill: none;
+  stroke: #53687a;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.guide-arm {
+  animation: none !important;
+}
+
+.guide-hand {
+  fill: #f4f1e9;
+  stroke: #33475b;
+  stroke-width: 3;
+}
+
+.guide-eye {
+  fill: #33475b;
+}
+
+.instructor-gesture {
+  transition: transform 0.35s ease;
+}
+
+.focus-ring {
+  fill: none;
+  stroke: #557f9c;
+  stroke-width: 2;
+  stroke-dasharray: 3 9;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
 
 .board-phase {
   opacity: 0;
@@ -2100,21 +2182,20 @@ h1 {
   opacity: 1;
 }
 
+.board-phase.is-current .focus-ring {
+  opacity: 1;
+}
+
 .board-phase.draw-in [data-draw-step],
 .board-phase.draw-in [data-draw-step] > * {
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
-  animation: whiteboard-draw 1.05s ease-out forwards;
+  animation: whiteboard-draw 1.2s ease-out forwards;
 }
 
 .board-phase.draw-in [data-draw-step="1"],
 .board-phase.draw-in [data-draw-step="1"] > * {
-  animation-delay: 0.65s;
-}
-
-.board-phase.draw-in [data-draw-step="2"],
-.board-phase.draw-in [data-draw-step="2"] > * {
-  animation-delay: 1.3s;
+  animation-delay: 0.75s;
 }
 
 @keyframes whiteboard-draw {
@@ -2205,33 +2286,26 @@ h1 {
     stroke-dashoffset: 0 !important;
   }
 
-  .board-pencil {
-    display: none !important;
-  }
-
   .video-stage.is-playing .flow-path {
     animation: none !important;
     stroke-dasharray: none !important;
+  }
+
+  .video-stage.is-playing .board-phase.is-current .focus-ring {
+    animation: none !important;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .video-stage.is-playing .flow-path {
-    stroke-dasharray: 12 16;
+    stroke-dasharray: 7 11;
     stroke-dashoffset: 0;
-    animation: data-flow 0.8s linear infinite;
+    animation: data-flow 1.6s linear infinite;
   }
 
-  .video-stage.is-playing .board-phase.is-active .impact-symbol {
-    animation: whiteboard-draw 1.05s ease-out 1.3s forwards, incident-pulse 1.8s ease-in-out 2.4s infinite;
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-
-  .video-stage.is-playing .board-phase.is-active .response-symbol {
-    animation: whiteboard-draw 1.05s ease-out 0.65s forwards, response-pulse 2.8s ease-in-out 1.8s infinite;
-    transform-box: fill-box;
-    transform-origin: center;
+  .video-stage.is-playing .board-phase.is-current .focus-ring {
+    stroke-dasharray: 3 9;
+    animation: focus-sweep 5s linear infinite;
   }
 }
 
@@ -2239,10 +2313,6 @@ h1 {
   to { stroke-dashoffset: -56; }
 }
 
-@keyframes incident-pulse {
-  50% { transform: scale(1.07); }
-}
-
-@keyframes response-pulse {
-  50% { transform: scale(1.035); }
+@keyframes focus-sweep {
+  to { stroke-dashoffset: -72; }
 }

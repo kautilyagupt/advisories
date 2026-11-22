@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261123f" />
+    <link rel="stylesheet" href="style.css?v=20261123g" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -160,11 +160,11 @@
             <p class="eyebrow">Visual whiteboard briefing</p>
             <h2 id="video-title">Watch the latest intelligence</h2>
           </div>
-          <span id="video-duration" class="status-badge">Narrated story chapters</span>
+          <span id="video-duration" class="status-badge">One continuous lesson</span>
         </div>
 
-        <div id="video-stage" class="video-stage whiteboard-stage" role="region" tabindex="0" aria-label="Text-free whiteboard animation. Use left and right arrows to change stories, or space to play. Optional device narration is available below.">
-          <svg id="whiteboard-art" class="whiteboard-art" viewBox="0 0 1200 520" role="img" aria-label="A hand-drawn cyber incident story">
+        <div id="video-stage" class="video-stage whiteboard-stage" role="region" tabindex="0" aria-label="Text-free, instructor-led whiteboard lesson. Use left and right arrows to change stories, or space to play. Optional device narration is available below.">
+          <svg id="whiteboard-art" class="whiteboard-art" viewBox="0 0 1200 675" role="img" aria-label="An instructor guides a text-free cybersecurity story">
             <defs>
               <symbol id="subject-laptop" viewBox="0 0 300 240">
                 <g fill="none" stroke="#24354a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
@@ -314,9 +314,11 @@
               </symbol>
               <symbol id="issue-ai" viewBox="0 0 100 100">
                 <g fill="none" stroke="#ce554d" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="18" y="29" width="64" height="56" rx="18"></rect>
-                  <path d="M50 12 V29 M39 12 H61 M33 52 H35 M65 52 H67 M36 70 Q50 81 64 70"></path>
-                  <path d="M77 10 L81 21 L92 25 L81 29 L77 40 L73 29 L62 25 L73 21 Z"></path>
+                  <rect x="24" y="24" width="52" height="52" rx="5"></rect>
+                  <path d="M36 37 H64 V63 H36 Z M50 10 V24 M50 76 V90 M10 50 H24 M76 50 H90 M36 37 L28 29 M64 37 L72 29 M36 63 L28 71 M64 63 L72 71"></path>
+                  <circle cx="50" cy="50" r="7"></circle>
+                  <path d="M50 43 V31 M43 50 H31 M57 50 H69 M50 57 V69"></path>
+                  <path class="ink-break" d="M76 25 L91 10"></path>
                 </g>
               </symbol>
               <symbol id="issue-identity" viewBox="0 0 100 100">
@@ -334,9 +336,85 @@
               </symbol>
               <symbol id="issue-default" viewBox="0 0 100 100">
                 <g fill="none" stroke="#ce554d" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M29 30 Q50 11 71 30 V65 Q50 86 29 65 Z M29 34 L15 20 M71 34 L85 20 M27 57 L12 69 M73 57 L88 69"></path>
-                  <circle cx="42" cy="44" r="3" fill="#ce554d"></circle>
-                  <circle cx="58" cy="44" r="3" fill="#ce554d"></circle>
+                  <circle cx="50" cy="50" r="34"></circle>
+                  <path d="M16 50 H37 L47 37 L57 63 L67 50 H84"></path>
+                  <path d="M50 16 V28 M50 72 V84" stroke-dasharray="4 9"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-data" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 29 H71 V93 H18 Z M28 42 H60 M28 55 H53 M28 68 H60"></path>
+                  <path d="M40 20 H83 V84 M51 11 H94 V75"></path>
+                  <path class="ink-red" d="M82 34 L98 50 L82 66"></path>
+                  <circle cx="101" cy="85" r="5" fill="#a56a38"></circle>
+                </g>
+              </symbol>
+              <symbol id="impact-account" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="14" y="22" width="72" height="76" rx="5"></rect>
+                  <path d="M27 39 H72 M27 53 H56"></path>
+                  <circle cx="72" cy="74" r="10"></circle>
+                  <path d="M82 74 H106 M96 74 V85 M105 74 V82"></path>
+                  <path class="ink-red" d="M25 86 H48"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-services" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="13" y="18" width="56" height="24" rx="3"></rect>
+                  <rect x="13" y="48" width="56" height="24" rx="3"></rect>
+                  <rect x="13" y="78" width="56" height="24" rx="3"></rect>
+                  <circle cx="25" cy="30" r="3" fill="#a56a38"></circle>
+                  <circle cx="25" cy="60" r="3" fill="#a56a38"></circle>
+                  <circle cx="25" cy="90" r="3" fill="#a56a38"></circle>
+                  <path d="M69 30 H91 V48 M69 60 H91 M69 90 H91 V72"></path>
+                  <path class="ink-red" d="M91 48 V72 M101 60 H111"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-network" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M29 34 L58 58 L91 31 M58 58 L30 88 M58 58 L91 86"></path>
+                  <circle cx="27" cy="31" r="12"></circle>
+                  <circle cx="94" cy="28" r="12"></circle>
+                  <circle cx="58" cy="59" r="13"></circle>
+                  <circle cx="27" cy="91" r="12"></circle>
+                  <circle cx="94" cy="89" r="12"></circle>
+                  <path class="ink-red" d="M82 77 L105 101"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-care" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 27 H102 V91 H18 Z M30 44 H90 M30 58 H58"></path>
+                  <path class="ink-red" d="M29 76 H43 L51 65 L62 84 L70 74 H91"></path>
+                  <path d="M45 105 H75"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-supply" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 82 H46 M74 82 H108 M18 82 V47 H44 V82 M77 82 V34 H103 V82"></path>
+                  <path d="M12 94 H108 M30 47 V35 H44 V47 M88 34 V21 H102 V34"></path>
+                  <path class="ink-red" d="M52 56 L64 68 L54 78 L67 90"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-operations" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 97 V56 L42 70 V47 L68 62 V34 L105 47 V97 Z"></path>
+                  <path d="M28 82 H44 M56 82 H70 M82 78 H95"></path>
+                  <path class="ink-red" d="M52 25 L64 37 L54 48 L68 61"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-deadline" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 15 H63 L79 31 V103 H17 Z M63 15 V31 H79 M29 48 H59 M29 62 H51"></path>
+                  <circle cx="78" cy="77" r="25" fill="#fffdf7"></circle>
+                  <path class="ink-red" d="M78 62 V78 L91 85"></path>
+                </g>
+              </symbol>
+              <symbol id="impact-device" viewBox="0 0 120 120">
+                <g fill="none" stroke="#a56a38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="12" y="19" width="73" height="55" rx="4"></rect>
+                  <path d="M7 86 Q48 93 91 86 L84 97 H15 Z"></path>
+                  <path class="ink-red" d="M49 28 L39 43 L54 53 L44 67"></path>
+                  <path d="M101 35 V89 M92 43 H110 M92 81 H110"></path>
                 </g>
               </symbol>
               <symbol id="response-patch" viewBox="0 0 120 120">
@@ -359,9 +437,9 @@
               </symbol>
               <symbol id="response-protect" viewBox="0 0 120 120">
                 <g fill="none" stroke="#4a9369" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="42" cy="37" r="18"></circle>
-                  <path d="M14 99 Q17 68 42 68 Q59 68 67 83 M78 37 L104 47 V68 Q104 89 78 102 Q67 97 61 88"></path>
-                  <path d="M69 68 L78 77 L94 59"></path>
+                  <path d="M60 12 L99 27 V57 Q99 91 60 108 Q21 91 21 57 V27 Z"></path>
+                  <circle cx="51" cy="57" r="12"></circle>
+                  <path d="M63 57 H91 M79 57 V70 M89 57 V66"></path>
                 </g>
               </symbol>
               <symbol id="response-isolate" viewBox="0 0 120 120">
@@ -372,9 +450,11 @@
               </symbol>
               <symbol id="response-guardrails" viewBox="0 0 120 120">
                 <g fill="none" stroke="#4a9369" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="60" cy="36" r="18"></circle>
-                  <path d="M26 101 Q30 69 60 69 Q90 69 94 101 M13 108 H107"></path>
-                  <path d="M18 77 V108 M102 77 V108"></path>
+                  <rect x="17" y="18" width="86" height="84" rx="6"></rect>
+                  <path d="M34 40 H86 M34 60 H86 M34 80 H86"></path>
+                  <circle cx="48" cy="40" r="7" fill="#fffdf7"></circle>
+                  <circle cx="72" cy="60" r="7" fill="#fffdf7"></circle>
+                  <circle cx="55" cy="80" r="7" fill="#fffdf7"></circle>
                 </g>
               </symbol>
               <symbol id="response-rotate" viewBox="0 0 120 120">
@@ -385,80 +465,72 @@
               </symbol>
               <symbol id="response-monitor" viewBox="0 0 120 120">
                 <g fill="none" stroke="#4a9369" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="60" cy="60" r="41"></circle>
-                  <path d="M60 19 V60 L91 39 M36 83 L48 71"></path>
-                  <circle cx="60" cy="60" r="5" fill="#4a9369"></circle>
+                  <rect x="13" y="17" width="94" height="68" rx="5"></rect>
+                  <path d="M24 68 H40 L51 47 L63 63 L74 39 L85 51 H97 M43 103 H77 M60 85 V103"></path>
                 </g>
               </symbol>
-              <symbol id="whiteboard-pencil" viewBox="0 0 48 48">
-                <path d="M8 32 L29 11 L39 21 L18 42 L7 44 Z" fill="#f3c36c" stroke="#24354a" stroke-width="3" stroke-linejoin="round"></path>
-                <path d="M7 44 L10 33 M29 11 L34 6 L44 16 L39 21" fill="none" stroke="#24354a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
-              </symbol>
-              <path id="pencil-route-0" d="M448 272 C540 224 627 224 719 263"></path>
-              <path id="pencil-route-1" d="M449 273 C520 238 586 238 661 267"></path>
-              <path id="pencil-route-2" d="M448 272 C500 229 541 229 594 258"></path>
             </defs>
-            <rect class="board-paper" x="5" y="5" width="1190" height="510" rx="24"></rect>
-            <path class="board-ground" d="M80 430 C260 421 365 438 545 428 S865 435 1120 426"></path>
+            <rect class="board-paper" x="5" y="5" width="1190" height="665" rx="24"></rect>
+            <path class="board-ground" d="M38 546 C240 539 358 551 548 544 S881 550 1163 542"></path>
+            <path class="board-route" d="M410 325 C445 325 455 260 486 260 M590 260 C634 260 649 390 696 390 M800 390 C850 390 888 285 936 285"></path>
+            <g class="board-overview" aria-hidden="true">
+              <use class="whiteboard-ink subject-icon" href="#subject-laptop" x="246" y="258" width="168" height="134"></use>
+              <use class="whiteboard-ink incident-symbol" href="#issue-default" x="490" y="210" width="100" height="100"></use>
+              <use class="whiteboard-ink impact-symbol" href="#impact-services" x="700" y="340" width="100" height="100"></use>
+              <use class="whiteboard-ink response-symbol" href="#response-patch" x="940" y="235" width="100" height="100"></use>
+            </g>
+            <g class="instructor-guide" aria-hidden="true">
+              <path class="guide-trousers" d="M67 411 L112 417 L106 520 H70 Z M112 417 L155 411 L163 520 H120 Z"></path>
+              <path class="guide-jacket" d="M105 228 Q77 234 68 267 L60 414 Q108 428 158 414 L151 268 Q143 237 123 228 Z"></path>
+              <path class="guide-detail" d="M104 231 L117 266 L132 231 M117 266 L114 393 M117 266 L124 279 L116 301 L110 279 Z M78 322 L104 342 M146 321 L177 343"></path>
+              <path class="guide-head" d="M105 151 Q91 162 95 189 L103 213 L120 226 L141 210 L151 181 Q150 153 126 148 Z"></path>
+              <path class="guide-hair" d="M95 179 Q91 148 119 141 Q148 140 154 164 L146 161 Q132 148 118 155 Q106 161 104 177 Z"></path>
+              <circle class="guide-eye" cx="135" cy="181" r="2.5"></circle>
+              <path class="guide-detail" d="M141 185 L151 190 L143 195 M130 208 Q137 211 142 207 M113 216 L113 231"></path>
+              <g id="instructor-gesture" transform="rotate(-38 146 270)">
+                <path class="guide-arm" d="M146 270 Q164 283 177 319 L190 344"></path>
+                <circle class="guide-hand" cx="190" cy="344" r="7"></circle>
+              </g>
+            </g>
             <g class="board-phase is-active" data-phase="0">
-              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink" data-draw-step="1">
-                <path class="ink-blue flow-path" d="M448 272 C540 224 627 224 719 263"></path>
-                <path class="ink-blue" d="M695 240 L724 265 L690 274"></path>
-              </g>
-              <use class="whiteboard-ink incident-symbol" data-draw-step="2" href="#issue-default" x="716" y="177" width="150" height="150"></use>
-              <g class="board-pencil" visibility="hidden" aria-hidden="true">
-                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
-                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
-                  <mpath href="#pencil-route-0"></mpath>
-                </animateMotion>
-              </g>
+              <circle class="focus-ring" cx="330" cy="325" r="92"></circle>
+              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="246" y="258" width="168" height="134"></use>
             </g>
             <g class="board-phase" data-phase="1">
-              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink" data-draw-step="1">
-                <path class="ink-red flow-path" d="M449 273 C520 238 586 238 661 267"></path>
-                <path class="ink-red" d="M638 244 L667 269 L633 278 M476 235 L490 249 M490 235 L476 249 M511 285 L525 299 M525 285 L511 299"></path>
-                <path class="ink-red" d="M820 203 Q848 225 820 247 M840 181 Q890 225 840 269"></path>
+              <circle class="focus-ring" cx="540" cy="260" r="86"></circle>
+              <g class="whiteboard-ink" data-draw-step="0">
+                <path class="ink-blue flow-path" d="M410 325 C445 325 455 260 486 260"></path>
+                <path class="ink-blue" d="M471 250 L489 260 L471 270"></path>
               </g>
-              <use class="whiteboard-ink incident-symbol impact-symbol" data-draw-step="2" href="#issue-default" x="647" y="177" width="160" height="160"></use>
-              <g class="board-pencil" visibility="hidden" aria-hidden="true">
-                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
-                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
-                  <mpath href="#pencil-route-1"></mpath>
-                </animateMotion>
-              </g>
+              <use class="whiteboard-ink incident-symbol" data-draw-step="1" href="#issue-default" x="490" y="210" width="100" height="100"></use>
             </g>
             <g class="board-phase" data-phase="2">
-              <use class="whiteboard-ink subject-icon" data-draw-step="0" href="#subject-laptop" x="95" y="143" width="350" height="280"></use>
-              <g class="whiteboard-ink" data-draw-step="1">
-                <path class="ink-blue flow-path" d="M448 272 C500 229 541 229 594 258"></path>
-                <path class="ink-blue" d="M576 241 L600 262 L571 272"></path>
+              <circle class="focus-ring" cx="750" cy="390" r="86"></circle>
+              <g class="whiteboard-ink" data-draw-step="0">
+                <path class="ink-blue flow-path" d="M590 260 C634 260 649 390 696 390"></path>
+                <path class="ink-blue" d="M681 380 L699 390 L681 400"></path>
               </g>
-              <use class="whiteboard-ink response-symbol" data-draw-step="1" href="#response-patch" x="620" y="152" width="175" height="175"></use>
-              <g class="whiteboard-ink" data-draw-step="2">
-                <path class="ink-green" d="M948 162 L1037 196 V271 Q1037 350 948 394 Q859 350 859 271 V196 Z"></path>
-                <path class="ink-green" d="M914 272 L938 297 L987 241"></path>
-                <path class="ink-blue" d="M820 270 C837 251 842 243 859 243"></path>
-                <path class="ink-blue" d="M843 228 L860 243 L840 255"></path>
+              <use class="whiteboard-ink impact-symbol" data-draw-step="1" href="#impact-services" x="700" y="340" width="100" height="100"></use>
+            </g>
+            <g class="board-phase" data-phase="3">
+              <circle class="focus-ring" cx="990" cy="285" r="86"></circle>
+              <g class="whiteboard-ink" data-draw-step="0">
+                <path class="ink-blue flow-path" d="M800 390 C850 390 888 285 936 285"></path>
+                <path class="ink-blue" d="M921 275 L939 285 L921 295"></path>
               </g>
-              <g class="board-pencil" visibility="hidden" aria-hidden="true">
-                <use href="#whiteboard-pencil" x="-20" y="-24" width="40" height="40"></use>
-                <animateMotion begin="indefinite" dur="1.6s" fill="freeze" rotate="auto">
-                  <mpath href="#pencil-route-2"></mpath>
-                </animateMotion>
-              </g>
+              <use class="whiteboard-ink response-symbol" data-draw-step="1" href="#response-patch" x="940" y="235" width="100" height="100"></use>
             </g>
           </svg>
         </div>
 
         <div class="story-chapters" aria-label="Animation chapters">
-          <button class="active" type="button" data-chapter="0" aria-pressed="true">1 <b>Incident</b></button>
-          <button type="button" data-chapter="1" aria-pressed="false">2 <b>Impact</b></button>
-          <button type="button" data-chapter="2" aria-pressed="false">3 <b>Response</b></button>
+          <button class="active" type="button" data-chapter="0" aria-pressed="true">1 <b>Context</b></button>
+          <button type="button" data-chapter="1" aria-pressed="false">2 <b>Incident</b></button>
+          <button type="button" data-chapter="2" aria-pressed="false">3 <b>Impact</b></button>
+          <button type="button" data-chapter="3" aria-pressed="false">4 <b>Response</b></button>
         </div>
         <div class="video-player-controls">
-          <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play animation</button>
+          <button id="video-play" class="video-play" type="button" aria-label="Play video briefing">▶ Play lesson</button>
           <button id="video-voice" class="video-icon-button voice-toggle" type="button" aria-label="Turn device voice narration off" aria-pressed="true" title="Uses a voice installed in your browser or device; quality varies.">🔊 Narration on</button>
           <button id="video-captions-toggle" class="video-icon-button captions-toggle" type="button" aria-label="Turn narration captions off" aria-pressed="true">CC Captions on</button>
           <div class="video-timeline">
@@ -472,7 +544,7 @@
           <span class="video-caption-label">Narration captions · outside the drawing</span>
           <p id="video-caption-live" aria-live="polite">Story narration will appear here when the briefing loads.</p>
         </div>
-        <p id="video-audio-status" class="video-audio-status" aria-live="polite">Narration follows this story’s incident, impact, and response. Voice quality depends on your device.</p>
+        <p id="video-audio-status" class="video-audio-status" aria-live="polite">Four instructor-led beats build one continuous scene. Voice quality depends on your device.</p>
         <div class="sr-only">
           <span id="video-number"></span>
           <span id="video-category"></span>
@@ -601,6 +673,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261123f"></script>
+    <script src="script.js?v=20261123g"></script>
   </body>
 </html>
