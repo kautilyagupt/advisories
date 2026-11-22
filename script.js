@@ -299,8 +299,8 @@ let videoBrief = {
   stories: [],
   index: 0,
   playing: false,
-  muted: true,
-  timer: null,
+  voiceEnabled: true,
+  narrationToken: 0,
   chapterTimer: null,
   chapterIndex: 0,
   chapters: [],
@@ -567,7 +567,6 @@ function syncVideoBriefing() {
     : -1;
   videoBrief.index = previousIndex >= 0 ? previousIndex : 0;
   renderVideoSlide();
-  if (videoBrief.playing) scheduleVideoAdvance();
 }
 
 function renderNews() {
@@ -1007,36 +1006,46 @@ async function init() {
     }
   });
 
-  document.getElementById('video-mute')?.addEventListener('click', (event) => {
-    videoBrief.muted = !videoBrief.muted;
-    event.currentTarget.setAttribute('aria-pressed', String(!videoBrief.muted));
-    event.currentTarget.setAttribute('aria-label', videoBrief.muted ? 'Enable optional narration' : 'Disable optional narration');
-    event.currentTarget.textContent = videoBrief.muted ? '🔇 Voice off' : '🔊 Voice on';
-    if (videoBrief.muted) stopNarration();
-    else if (videoBrief.playing) renderVideoSlide();
+  const voiceButton = document.getElementById('video-voice');
+  if (voiceButton && !('speechSynthesis' in window)) {
+    videoBrief.voiceEnabled = false;
+    voiceButton.disabled = true;
+    voiceButton.textContent = 'Narration unavailable';
+    voiceButton.setAttribute('aria-pressed', 'false');
+    voiceButton.setAttribute('aria-label', 'Device voice narration is not available in this browser');
+    document.getElementById('video-duration').textContent = 'About 1 minute';
+    document.getElementById('video-audio-status').textContent = 'This browser does not provide voice narration; the animation remains available silently.';
+  }
+  voiceButton?.addEventListener('click', () => {
+    videoBrief.voiceEnabled = !videoBrief.voiceEnabled;
+    voiceButton.setAttribute('aria-pressed', String(videoBrief.voiceEnabled));
+    voiceButton.setAttribute('aria-label', videoBrief.voiceEnabled ? 'Turn device voice narration off' : 'Turn device voice narration on');
+    voiceButton.textContent = videoBrief.voiceEnabled ? '🔊 Narration on' : '🔈 Narration off';
+    document.getElementById('video-duration').textContent = videoBrief.voiceEnabled ? 'Narrated story chapters' : 'About 1 minute';
+    document.getElementById('video-audio-status').textContent = videoBrief.voiceEnabled
+      ? 'Narration follows this story’s incident, impact, and response. Voice quality depends on your device.'
+      : 'Optional narration explains the incident, its specific impact, and a practical response. Voice quality depends on your device.';
+    if (videoBrief.voiceEnabled && videoBrief.playing) {
+      speakCurrentChapter();
+    } else {
+      stopNarration();
+      if (videoBrief.playing) scheduleChapterAdvance(4500);
+    }
   });
 
   document.getElementById('video-prev')?.addEventListener('click', () => {
     videoBrief.index = Math.max(0, videoBrief.index - 1);
     renderVideoSlide();
-    if (videoBrief.playing) scheduleVideoAdvance();
   });
 
   document.getElementById('video-next')?.addEventListener('click', () => {
-    nextVideoSlide(false);
+    nextVideoSlide();
   });
 
   document.querySelector('.story-chapters')?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-chapter]');
     if (!button || !videoBrief.chapters.length) return;
     showCartoonChapter(Number(button.dataset.chapter));
-    if (videoBrief.playing) {
-      if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
-      videoBrief.chapterTimer = setInterval(() => {
-        if (!videoBrief.playing) return;
-        showCartoonChapter((videoBrief.chapterIndex + 1) % videoBrief.chapters.length);
-      }, 4000);
-    }
   });
 
   document.getElementById('video-stage')?.addEventListener('keydown', (event) => {
@@ -1044,10 +1053,9 @@ async function init() {
       event.preventDefault();
       videoBrief.index = Math.max(0, videoBrief.index - 1);
       renderVideoSlide();
-      if (videoBrief.playing) scheduleVideoAdvance();
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
-      nextVideoSlide(false);
+      nextVideoSlide();
     } else if (event.key === ' ') {
       event.preventDefault();
       document.getElementById('video-play')?.click();
@@ -1281,34 +1289,76 @@ function buildExpertQuestion(story) {
 }
 
 function stopNarration() {
+  videoBrief.narrationToken += 1;
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
-function speakBriefing(text) {
-  if (videoBrief.muted || !('speechSynthesis' in window)) return;
-  stopNarration();
-  const utterance = new SpeechSynthesisUtterance(text);
+function chooseNarrationVoice() {
   const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find((voice) => /en-(US|GB|IN)/i.test(voice.lang)) || voices[0];
-  if (preferred) utterance.voice = preferred;
-  utterance.rate = 0.92;
+  const englishVoices = voices.filter((voice) => /^en([_-]|$)/i.test(voice.lang));
+  const candidates = englishVoices.length ? englishVoices : voices;
+  return candidates.find((voice) => /neural|natural|premium|enhanced/i.test(voice.name))
+    || candidates.find((voice) => /google|microsoft/i.test(voice.name))
+    || candidates.find((voice) => voice.default)
+    || candidates[0]
+    || null;
+}
+
+function speakCurrentChapter() {
+  const chapter = videoBrief.chapters[videoBrief.chapterIndex];
+  if (!chapter || !videoBrief.voiceEnabled || !('speechSynthesis' in window)) return;
+  stopNarration();
+  const token = videoBrief.narrationToken;
+  const spokenText = chapter.narration
+    .replace(/\bCVE-(\d{4})-(\d+)\b/gi, (_, year, identifier) => `C V E, ${year}, ${identifier.split('').join(' ')}`)
+    .replace(/\bAI\b/gi, 'A I')
+    .replace(/\bOT\b/gi, 'O T')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const utterance = new SpeechSynthesisUtterance(spokenText);
+  const voice = chooseNarrationVoice();
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.96;
+  utterance.pitch = 1;
   utterance.onend = () => {
-    if (!videoBrief.playing) return;
-    if (videoBrief.timer) clearTimeout(videoBrief.timer);
-    videoBrief.timer = setTimeout(() => nextVideoSlide(true), 700);
+    if (token !== videoBrief.narrationToken || !videoBrief.playing || !videoBrief.voiceEnabled) return;
+    advanceCartoonChapter();
+  };
+  utterance.onerror = () => {
+    if (token !== videoBrief.narrationToken) return;
+    const status = document.getElementById('video-audio-status');
+    status.textContent = 'Device narration failed; the animation will continue silently.';
+    scheduleChapterAdvance(4500);
   };
   window.speechSynthesis.speak(utterance);
+}
+
+function scheduleChapterAdvance(delay = 4500) {
+  if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
+  if (!videoBrief.playing) return;
+  videoBrief.chapterTimer = setTimeout(advanceCartoonChapter, delay);
+}
+
+function advanceCartoonChapter() {
+  if (!videoBrief.playing) return;
+  if (videoBrief.chapterIndex < videoBrief.chapters.length - 1) {
+    showCartoonChapter(videoBrief.chapterIndex + 1);
+  } else {
+    nextVideoSlide();
+  }
 }
 
 function showCartoonChapter(index) {
   const chapter = videoBrief.chapters[index];
   if (!chapter) return;
+  if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
+  stopNarration();
   videoBrief.chapterIndex = index;
   document.querySelectorAll('.board-phase').forEach((phase, phaseIndex) => {
     const active = phaseIndex === index;
     phase.classList.toggle('is-active', active);
     phase.classList.remove('draw-in');
-    if (active && videoBrief.playing) {
+    if (active) {
       void phase.getBoundingClientRect();
       phase.classList.add('draw-in');
     }
@@ -1317,26 +1367,170 @@ function showCartoonChapter(index) {
     item.classList.toggle('active', itemIndex === index);
     item.setAttribute('aria-pressed', String(itemIndex === index));
   });
-  setTimeout(() => {
-    document.getElementById('cartoon-kicker').textContent = chapter.kicker;
-    document.getElementById('cartoon-message').textContent = chapter.text;
-  }, 180);
+  document.getElementById('cartoon-kicker').textContent = chapter.kicker;
+  document.getElementById('cartoon-message').textContent = chapter.text;
+  if (videoBrief.playing) {
+    if (videoBrief.voiceEnabled) speakCurrentChapter();
+    else scheduleChapterAdvance();
+  }
 }
 
-function renderCartoonStory(story) {
-  if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
-  videoBrief.currentStory = story;
-  videoBrief.chapters = [
-    { kicker: 'WHAT HAPPENED', text: story.summary || story.title },
-    { kicker: 'WHY IT MATTERS', text: story.whyItMatters || story.summary },
-    { kicker: 'WHAT TO DO', text: story.takeaway || 'Review the primary advisory and apply the recommended controls.' }
+function getNarrationLead(sceneType) {
+  const leads = {
+    hospital: 'In healthcare, a cyber incident can interrupt the systems staff rely on to care for patients.',
+    browser: 'A web browser is a common doorway from the internet onto work devices.',
+    policy: 'A change in cyber rules can affect how quickly organizations must report an incident.',
+    mobile: 'Mobile providers hold account and contact details that can be misused to impersonate customers.',
+    network: 'Routers and remote management services connect many devices to one another and to the internet.',
+    package: 'Modern software depends on packages that flow through a shared supply chain.',
+    ai: 'AI services process prompts and request data that may contain private information.',
+    identity: 'A compromised account can make an attacker appear to be a legitimate user.',
+    cloud: 'Cloud services connect applications, data, and credentials across an organization.',
+    ot: 'Industrial control systems keep real-world operations running.',
+    server: 'A server compromise can put many connected services at risk.',
+    laptop: 'A security incident on one connected system can create risk for the wider organization.'
+  };
+  return leads[sceneType] || leads.laptop;
+}
+
+function getWhiteboardResponseType(sceneType, issueType) {
+  if (sceneType === 'policy') return 'report';
+  if (sceneType === 'hospital' && issueType === 'ransomware') return 'backup';
+  if (sceneType === 'package') return 'isolate';
+  if (sceneType === 'ai') return issueType === 'breach' ? 'protect' : 'guardrails';
+  if (sceneType === 'identity' || sceneType === 'mobile') return 'protect';
+  if (sceneType === 'cloud') return 'rotate';
+  if (sceneType === 'ot') return 'monitor';
+  if (issueType === 'ransomware') return 'backup';
+  if (issueType === 'breach') return 'protect';
+  return 'patch';
+}
+
+function completeStorySentence(text) {
+  const normalized = (text || '').replace(/\s+/g, ' ').trim();
+  if (/[.!?]["')\]]?$/.test(normalized)) return normalized;
+  const sentenceEnds = [...normalized.matchAll(/[.!?](?=\s)/g)];
+  if (!sentenceEnds.length) return normalized;
+  return normalized.slice(0, sentenceEnds[sentenceEnds.length - 1].index + 1);
+}
+
+function buildCartoonChapters(story, sceneType) {
+  const summary = completeStorySentence(story.summary || story.title);
+  const issueType = getWhiteboardIssueType(story, sceneType);
+  const genericCopy = /this story matters because it can affect organizations, consumers, and security teams in the coming days|review their monitoring, patching, and communication plans promptly/i;
+  const specificImpact = {
+    hospital: 'When clinical systems go down, appointment, records, and care workflows can be disrupted.',
+    browser: 'A browser flaw can give an attacker a path from a web page to a user’s device or account.',
+    policy: 'Missed reporting deadlines can leave organizations out of compliance during an incident.',
+    mobile: 'Exposed phone and account details can be used to impersonate subscribers or target them with scams.',
+    network: 'A flaw in remote management can let attackers install malware on routers and the devices or traffic they handle.',
+    package: 'A compromised package can spread malicious code or stolen credentials to downstream software teams.',
+    ai: 'Prompts sent to an AI provider can contain private conversations, business data, or credentials.',
+    identity: 'Stolen credentials or sessions let attackers impersonate a real user.',
+    cloud: 'An exposed cloud secret can grant access to data and services beyond the original account.',
+    ot: 'A cyber incident in operational technology can disrupt physical services, not just computers.',
+    server: 'A vulnerable shared server can expose the applications and data that rely on it.'
+  };
+  const specificResponse = {
+    hospital: 'Keep essential care workflows available, isolate affected systems, and restore only from verified backups.',
+    browser: 'Deploy the fixed browser version and verify that managed devices have updated.',
+    policy: 'Confirm the reporting deadline and escalation path with the accountable compliance owner.',
+    mobile: 'Protect affected accounts, alert customers to impersonation attempts, and monitor for account changes.',
+    network: 'Patch the remote-management service, restrict exposed administration, and check routers and KVM devices for malware.',
+    package: 'Remove the affected package, check downstream builds, and rotate any credentials it could access.',
+    ai: issueType === 'breach'
+      ? 'Check whether sensitive prompts or secrets were sent to affected providers, rotate exposed credentials, and verify provider access controls.'
+      : 'Limit AI tools to necessary data and permissions, and require human approval before sensitive actions.',
+    identity: 'Revoke exposed sessions, reset affected credentials, and require stronger sign-in checks.',
+    cloud: 'Rotate exposed secrets and inspect cloud audit logs for unexpected access.',
+    ot: 'Use the site’s safe isolation and recovery procedures while monitoring essential operations.',
+    server: 'Patch affected systems, verify exposure, and monitor for signs of exploitation.'
+  };
+  const sourceImpact = completeStorySentence(story.whyItMatters || '');
+  const sourceTakeaway = completeStorySentence(story.takeaway || '');
+  const impactIsGeneric = !sourceImpact || genericCopy.test(sourceImpact);
+  const takeawayIsGeneric = !sourceTakeaway || genericCopy.test(sourceTakeaway);
+  const impact = impactIsGeneric ? specificImpact[sceneType] || summary : sourceImpact;
+  const takeaway = takeawayIsGeneric
+    ? specificResponse[sceneType] || 'Verify affected systems, apply the trusted fix, and monitor for signs of misuse.'
+    : sourceTakeaway;
+  const impactLead = {
+    hospital: 'The immediate concern is keeping clinical care available.',
+    browser: 'The concern is that an exposed browser can become a route into a device or account.',
+    policy: 'The impact is on the organization’s reporting and response responsibilities.',
+    mobile: 'Exposed customer details can make convincing scams and account takeover attempts easier.',
+    network: 'Remote access can turn one network-device flaw into malware on equipment behind it.',
+    package: 'A compromised dependency can carry risk into every product that uses it.',
+    ai: issueType === 'breach'
+      ? 'The immediate concern is information users sent to the provider being accessed without their knowledge.'
+      : 'The risk grows when an AI tool can reach sensitive data or make changes without approval.',
+    identity: 'A leaked identity or session can enable convincing impersonation.',
+    cloud: 'A single exposed cloud credential can open access to more than one service.',
+    ot: 'A digital incident can affect the availability of physical operations.',
+    server: 'A weakness on a shared server can expose the services and data that depend on it.'
+  }[sceneType] || 'The impact depends on which systems are affected and how quickly they can be contained.';
+  const responseLead = {
+    hospital: 'Keep patient-care workflows safe, then restore from backups that have been verified.',
+    browser: 'Prioritize the fixed browser version and verify that managed devices have updated.',
+    policy: 'Assign an owner to verify the deadline, reporting path, and evidence requirements.',
+    mobile: 'Protect affected accounts, warn users about impersonation, and watch for account changes.',
+    network: 'Restrict remote management, patch routers, and verify that connected devices are clean.',
+    package: 'Isolate the affected dependency, check where it was used, and rotate exposed credentials.',
+    ai: issueType === 'breach'
+      ? 'Treat the affected provider as a possible data exposure, check what was sent, and rotate any secrets in those requests.'
+      : 'Limit the agent to necessary tools and require human approval for sensitive actions.',
+    identity: 'Revoke exposed sessions, reset affected credentials, and strengthen sign-in checks.',
+    cloud: 'Rotate exposed secrets and review access logs for unexpected use.',
+    ot: 'Follow the site’s safe isolation and recovery procedures while monitoring essential operations.',
+    server: 'Patch affected systems, verify exposure, and monitor for signs of exploitation.'
+  }[sceneType] || 'Verify affected systems, apply the trusted fix, and monitor for signs of misuse.';
+  const impactNarration = impactIsGeneric ? impact : `${impactLead} ${impact}`;
+  const responseNarration = takeawayIsGeneric ? takeaway : `${responseLead} ${takeaway}`;
+  return [
+    { kicker: 'WHAT HAPPENED', text: summary, narration: `${getNarrationLead(sceneType)} ${summary}` },
+    { kicker: 'WHY IT MATTERS', text: impact, narration: impactNarration },
+    { kicker: 'WHAT TO DO', text: takeaway, narration: responseNarration }
   ];
+}
+
+function renderCartoonStory(story, sceneType) {
+  if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
+  videoBrief.currentStory = story;
+  videoBrief.chapters = buildCartoonChapters(story, sceneType);
   showCartoonChapter(0);
-  if (!videoBrief.playing) return;
-  videoBrief.chapterTimer = setInterval(() => {
-    if (!videoBrief.playing) return;
-    showCartoonChapter((videoBrief.chapterIndex + 1) % videoBrief.chapters.length);
-  }, 4000);
+}
+
+function getWhiteboardSceneType(story) {
+  const classify = (text) => {
+    if (/hospital|healthcare|clinical|patient/.test(text)) return 'hospital';
+    if (/chrome|browser|zero.day|web browser/.test(text)) return 'browser';
+    if (/regulat|policy|compliance|legislation|disclosure rules/.test(text)) return 'policy';
+    if (/mobile|telecom|phone|sim swap/.test(text)) return 'mobile';
+    if (/supply.chain|dependency|open.source|package/.test(text)) return 'package';
+    if (/\brouters?\b|\bfirewalls?\b|\bvpn appliances?\b|\bnetwork appliances?\b|\bnetwork devices?\b|\bkvm devices?\b/.test(text)) return 'network';
+    if (/agentic|agent & ai|\bai\b|artificial intelligence|\bllm\b|prompt injection|prompt theft|language model|inference provider/.test(text)) return 'ai';
+    if (/identity|phishing|session.token|credential|data breach|data leak|stolen data/.test(text)) return 'identity';
+    if (/cloud|kubernetes|container|secrets?/.test(text)) return 'cloud';
+    if (/scada|operational technology|industrial control|manufacturing systems?|power grid|pipeline control|factory network/.test(text)) return 'ot';
+    if (/server|linux|kernel|database|ransomware|malware/.test(text)) return 'server';
+    return null;
+  };
+  return classify(`${story.title} ${story.category}`.toLowerCase())
+    || classify((story.summary || '').toLowerCase())
+    || 'laptop';
+}
+
+function getWhiteboardIssueType(story, sceneType) {
+  const text = `${story.title} ${story.summary} ${story.category}`.toLowerCase();
+  if (sceneType === 'policy') return 'policy';
+  if (sceneType === 'package') return 'supply';
+  if (/ransomware|encrypt/.test(text)) return 'ransomware';
+  if (/breach|leak|exposed|stolen data|stole data|data theft|exfiltrat|prompt theft|\bhack\b|intrusion|compromised/.test(text)) return 'breach';
+  if (/vulnerab|zero.day|patch(?:es|ed)?\b|exploit|security flaw/.test(text)) return 'vulnerability';
+  if (sceneType === 'ai') return 'ai';
+  if (sceneType === 'identity') return 'identity';
+  if (sceneType === 'cloud') return 'cloud';
+  return 'default';
 }
 
 function renderVideoSlide() {
@@ -1364,37 +1558,31 @@ function renderVideoSlide() {
   document.getElementById('cartoon-kicker').textContent = 'WHAT HAPPENED';
   document.getElementById('cartoon-message').textContent = story.summary || story.title;
   stage.dataset.impact = (story.impact || 'Medium').toLowerCase();
-  const storyType = /vulnerab|zero.day|patch/i.test(story.category) || /vulnerab|zero.day/i.test(story.title)
-    ? 'vulnerability'
-    : /breach|leak/i.test(story.category) || /breach|leak/i.test(story.title)
-      ? 'breach'
-      : /ransomware/i.test(story.category) || /ransomware/i.test(story.title)
-        ? 'ransomware'
-        : 'default';
-  document.getElementById('whiteboard-art').dataset.storyType = storyType;
-  document.getElementById('whiteboard-art').setAttribute('aria-label', `Whiteboard illustration of a ${story.category || 'cybersecurity'} story`);
+  const art = document.getElementById('whiteboard-art');
+  const sceneType = getWhiteboardSceneType(story);
+  const issueType = getWhiteboardIssueType(story, sceneType);
+  const responseType = getWhiteboardResponseType(sceneType, issueType);
+  art.dataset.sceneType = sceneType;
+  art.dataset.issueType = issueType;
+  art.dataset.responseType = responseType;
+  art.querySelectorAll('.subject-icon').forEach((icon) => icon.setAttribute('href', `#subject-${sceneType}`));
+  art.querySelectorAll('.incident-symbol').forEach((icon) => icon.setAttribute('href', `#issue-${issueType}`));
+  art.querySelectorAll('.response-symbol').forEach((icon) => icon.setAttribute('href', `#response-${responseType}`));
+  art.setAttribute('aria-label', `Whiteboard scene showing ${story.category || 'cybersecurity'} affecting ${sceneType} systems, with a ${responseType} response`);
   document.getElementById('video-slide-counter').textContent = `${videoBrief.index + 1} / ${storiesToShow.length}`;
   document.getElementById('video-progress').style.width = `${((videoBrief.index + 1) / storiesToShow.length) * 100}%`;
-  renderCartoonStory(story);
-  if (videoBrief.playing) speakBriefing(`${story.category}. ${story.title}. ${story.summary}. Recommended action: ${story.takeaway}`);
+  renderCartoonStory(story, sceneType);
 }
 
 function stopVideoBrief() {
   videoBrief.playing = false;
-  if (videoBrief.timer) clearTimeout(videoBrief.timer);
-  if (videoBrief.chapterTimer) clearInterval(videoBrief.chapterTimer);
+  if (videoBrief.chapterTimer) clearTimeout(videoBrief.chapterTimer);
   stopNarration();
   document.getElementById('video-stage')?.classList.remove('is-playing');
   document.getElementById('video-play').textContent = '▶ Play briefing';
 }
 
-function scheduleVideoAdvance() {
-  if (videoBrief.timer) clearTimeout(videoBrief.timer);
-  if (!videoBrief.playing) return;
-  videoBrief.timer = setTimeout(() => nextVideoSlide(true), 12000);
-}
-
-function nextVideoSlide(autoAdvance = false) {
+function nextVideoSlide() {
   if (videoBrief.index < videoBrief.stories.length - 1) {
     videoBrief.index += 1;
     renderVideoSlide();
@@ -1402,7 +1590,6 @@ function nextVideoSlide(autoAdvance = false) {
     stopVideoBrief();
     document.getElementById('video-play').textContent = '↻ Replay briefing';
   }
-  if (videoBrief.playing) scheduleVideoAdvance();
 }
 
 function startVideoBrief() {
@@ -1417,5 +1604,4 @@ function startVideoBrief() {
   renderVideoSlide();
   document.getElementById('video-stage')?.classList.add('is-playing');
   document.getElementById('video-play').textContent = 'Ⅱ Pause briefing';
-  scheduleVideoAdvance();
 }

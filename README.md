@@ -18,7 +18,7 @@ A professional, privacy-friendly cybersecurity intelligence briefing for GitHub 
 - Browser smoke-test suite under `tests/`
 - Story-aware adaptive knowledge checks with explanations and topic review
 - Local best-score, attempt count, and weak-topic progress tracking
-- Text-free whiteboard news animation with illustrated incident, impact, and response chapters, plus optional narration off by default
+- Text-free whiteboard news animation with story-matched incident, impact, and response drawings, topic-specific narration, and optional device voice
 
 ## How to view it
 Open [index.html](index.html) in a browser.
@@ -38,4 +38,4 @@ The repository can be hosted through GitHub Pages. Live content uses public RSS 
 Once the repository is published with GitHub Pages, the site will be available at:
 
 https://kautilyagupt.github.io/advisories/
-Cache-busting: `index.html` now references `style.css?v=c22533d` and `script.js?v=c22533d` to force browsers to fetch updated assets after deployments.
+Cache-busting: `index.html` references versioned CSS and JavaScript assets to force browsers to fetch updates after deployments.

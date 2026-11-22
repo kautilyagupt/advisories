@@ -2106,22 +2106,15 @@ h1 {
   animation: whiteboard-draw 1.6s ease-out forwards;
 }
 
+.board-phase.draw-in > .whiteboard-ink {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: whiteboard-draw 1.6s ease-out forwards;
+}
+
 .board-phase.draw-in .whiteboard-ink > :nth-child(2) { animation-delay: 0.15s; }
 .board-phase.draw-in .whiteboard-ink > :nth-child(3) { animation-delay: 0.3s; }
 .board-phase.draw-in .whiteboard-ink > :nth-child(4) { animation-delay: 0.45s; }
-
-.issue-vulnerability,
-.issue-breach,
-.issue-ransomware {
-  display: none;
-}
-
-#whiteboard-art[data-story-type="vulnerability"] .issue-vulnerability,
-#whiteboard-art[data-story-type="breach"] .issue-breach,
-#whiteboard-art[data-story-type="ransomware"] .issue-ransomware,
-#whiteboard-art[data-story-type="default"] .issue-default {
-  display: inline;
-}
 
 @keyframes whiteboard-draw {
   to { stroke-dashoffset: 0; }
@@ -2138,6 +2131,16 @@ h1 {
   min-width: 0;
 }
 
+.video-audio-status {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.video-icon-button.voice-toggle {
+  white-space: nowrap;
+}
+
 .story-chapters button {
   min-height: 42px;
 }
@@ -2151,13 +2154,55 @@ h1 {
     grid-column: 1 / -1;
     grid-row: 2;
   }
+
+  .video-icon-button.voice-toggle {
+    font-size: 0.75rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .board-phase,
+  .board-phase.draw-in > .whiteboard-ink,
   .board-phase.draw-in .whiteboard-ink > * {
     animation: none !important;
     transition: none !important;
     stroke-dashoffset: 0 !important;
   }
+
+  .video-stage.is-playing .flow-path {
+    animation: none !important;
+    stroke-dasharray: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .video-stage.is-playing .flow-path {
+    stroke-dasharray: 12 16;
+    stroke-dashoffset: 0;
+    animation: data-flow 0.8s linear infinite;
+  }
+
+  .video-stage.is-playing .board-phase.is-active .impact-symbol {
+    animation: whiteboard-draw 1.6s ease-out forwards, incident-pulse 1.8s ease-in-out 1.6s infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .video-stage.is-playing .board-phase.is-active .response-symbol {
+    animation: whiteboard-draw 1.6s ease-out forwards, response-pulse 2.8s ease-in-out 1.6s infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+@keyframes data-flow {
+  to { stroke-dashoffset: -56; }
+}
+
+@keyframes incident-pulse {
+  50% { transform: scale(1.07); }
+}
+
+@keyframes response-pulse {
+  50% { transform: scale(1.035); }
 }
