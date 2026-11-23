@@ -220,20 +220,56 @@ test('silent playback builds a scene continuously and advances to the next story
   expect(progression.nextStory).toEqual({ index: 1, scene: 'network', phase: '0' });
 });
 
-test('story-matched drawings build continuously across 32 chapter reviews', async ({ page }) => {
+test('camera pans between story beats instead of cutting between slides', async ({ page }) => {
+  await page.waitForTimeout(1200);
+  const start = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
+  await page.locator('[data-chapter="1"]').click();
+  await page.waitForTimeout(150);
+  const moving = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
+  await page.waitForTimeout(1200);
+  const end = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
+
+  expect(moving).not.toBe(start);
+  expect(moving).not.toBe(end);
+});
+
+test('story camera follows 100 narrative checkpoints across 25 stories', async ({ page }) => {
   const reviews = await page.evaluate(() => {
-    const stories = [
-      { title: 'Prompt data stolen at AI providers', summary: 'Attackers stole data from AI inference providers for months.', category: 'Data Breach' },
-      { title: 'Router remote management vulnerability', summary: 'A flaw in router software is being exploited.', category: 'Vulnerability' },
-      { title: 'Ransomware disrupts hospital systems', summary: 'Attackers encrypted clinical systems and interrupted care.', category: 'Ransomware' },
-      { title: 'Phishing campaign targets employee accounts', summary: 'Messages impersonate a trusted service to steal sign-in details.', category: 'Phishing' },
-      { title: 'Chrome zero-day exploited in attacks', summary: 'A browser flaw is being used to compromise devices.', category: 'Vulnerability' },
-      { title: 'Compromised open-source package', summary: 'A malicious dependency affects downstream software.', category: 'Supply Chain' },
-      { title: 'Cloud secret leaked from production', summary: 'An exposed cloud key allowed unauthorized access.', category: 'Cloud Security' },
-      { title: 'Factory network intrusion reported', summary: 'A cyber incident affected an industrial control network.', category: 'OT Security' }
+    const cases = [
+      [{ title: 'Prompt data stolen at AI providers', summary: 'Attackers stole data from AI inference providers for months.', category: 'Data Breach' }, 'ai'],
+      [{ title: 'Router remote management vulnerability', summary: 'A flaw in router software is being exploited.', category: 'Vulnerability' }, 'network'],
+      [{ title: 'Ransomware disrupts hospital systems', summary: 'Attackers encrypted clinical systems and interrupted care.', category: 'Ransomware' }, 'hospital'],
+      [{ title: 'Phishing campaign targets employee accounts', summary: 'Messages impersonate a trusted service to steal sign-in details.', category: 'Phishing' }, 'identity'],
+      [{ title: 'Chrome zero-day exploited in attacks', summary: 'A browser flaw is being used to compromise devices.', category: 'Vulnerability' }, 'browser'],
+      [{ title: 'Compromised open-source package', summary: 'A malicious dependency affects downstream software.', category: 'Supply Chain' }, 'package'],
+      [{ title: 'Cloud secret leaked from production', summary: 'An exposed cloud key allowed unauthorized access.', category: 'Cloud Security' }, 'cloud'],
+      [{ title: 'Factory network intrusion reported', summary: 'A cyber incident affected an industrial control network.', category: 'OT Security' }, 'ot'],
+      [{ title: 'Mobile subscriber records exposed', summary: 'Customer details were accessed without authorization.', category: 'Telecom' }, 'mobile'],
+      [{ title: 'New incident disclosure deadline announced', summary: 'Regulators clarified the reporting window.', category: 'Policy' }, 'policy'],
+      [{ title: 'Server RCE flaw exploited in attacks', summary: 'The vulnerability allows remote command execution.', category: 'Threat Intelligence' }, 'server'],
+      [{ title: 'Criminal justice database breach confirmed', summary: 'An intruder accessed sensitive records.', category: 'Threat Intelligence' }, 'server'],
+      [{ title: 'AI agent tool server serves malicious updates', summary: 'A poisoned tool can misuse connected data.', category: 'AI Security' }, 'ai'],
+      [{ title: 'VPN appliance zero-day actively exploited', summary: 'Attackers target exposed network gateways.', category: 'Vulnerability' }, 'network'],
+      [{ title: 'Hospital patient portal outage disrupts appointments', summary: 'Clinical access is unavailable during recovery.', category: 'Healthcare' }, 'hospital'],
+      [{ title: 'Dependency malware reaches production builds', summary: 'A compromised package affected downstream releases.', category: 'Supply Chain' }, 'package'],
+      [{ title: 'Cloud API key leak exposes production services', summary: 'An exposed credential enabled unauthorized access.', category: 'Cloud Security' }, 'cloud'],
+      [{ title: 'SCADA intrusion reported at a power utility', summary: 'Operators isolated systems after detecting an intrusion.', category: 'Critical Infrastructure' }, 'ot'],
+      [{ title: 'Stolen identity session tokens used in attacks', summary: 'Attackers impersonated authenticated employees.', category: 'Identity' }, 'identity'],
+      [{ title: 'Linux kernel privilege flaw under active exploitation', summary: 'A kernel weakness can grant elevated access.', category: 'Vulnerability' }, 'server'],
+      [{ title: 'Employee endpoint hardening guidance updated', summary: 'Security teams received new device controls.', category: 'Guidance' }, 'laptop'],
+      [{ title: 'Telecom subscriber data leak triggers investigation', summary: 'Customer records were exposed in a breach.', category: 'Telecom' }, 'mobile'],
+      [{ title: 'AI prompt logs exposed by inference service', summary: 'Private prompts were accessible to unauthorized users.', category: 'AI Security' }, 'ai'],
+      [{ title: 'Incident reporting deadline shortened', summary: 'A new disclosure window applies to covered organizations.', category: 'Policy' }, 'policy'],
+      [{ title: 'Enterprise database accessed by intruder', summary: 'Investigators confirmed unauthorized access to records.', category: 'Threat Intelligence' }, 'server']
     ];
     const results = [];
-    for (const story of stories) {
+    const cameraTargets = [
+      { x: 410, y: 325 },
+      { x: 615, y: 260 },
+      { x: 820, y: 390 },
+      { x: 1050, y: 285 }
+    ];
+    for (const [story, expectedScene] of cases) {
       videoBrief.stories = [story];
       videoBrief.index = 0;
       renderVideoSlide();
@@ -245,20 +281,27 @@ test('story-matched drawings build continuously across 32 chapter reviews', asyn
         const phase = document.querySelector('.board-phase.is-current');
         const activePhases = document.querySelectorAll('.board-phase.is-active');
         const chapter = videoBrief.chapters[phaseIndex];
+        const target = cameraTargets[phaseIndex];
         results.push({
           phase: phase.getAttribute('data-phase'),
           activePhaseCount: activePhases.length,
           focus: document.getElementById('whiteboard-art').dataset.focus,
+          scene,
+          expectedScene,
+          actor: document.querySelector('.board-phase[data-phase="0"] .actor-icon').getAttribute('href'),
+          expectedActor: `#actor-${scene === 'hospital' ? 'clinician' : scene === 'ot' ? 'operator' : 'analyst'}`,
           subject: document.querySelector('.board-phase .subject-icon').getAttribute('href'),
           issue: [...document.querySelectorAll('.board-phase.is-active .incident-symbol')].pop()?.getAttribute('href') || null,
           impact: [...document.querySelectorAll('.board-phase.is-active .impact-symbol')].pop()?.getAttribute('href') || null,
           response: [...document.querySelectorAll('.board-phase.is-active .response-symbol')].pop()?.getAttribute('href') || null,
-          expectedScene: scene,
+          camera: document.getElementById('story-camera').getAttribute('transform'),
+          expectedCamera: `translate(${(820 - target.x * 1.18).toFixed(1)} ${(337.5 - target.y * 1.18).toFixed(1)}) scale(1.18)`,
           expectedIssue: phaseIndex >= 1 ? `#issue-${issue}` : null,
           expectedImpact: phaseIndex >= 2 ? `#impact-${getWhiteboardImpactType(scene)}` : null,
           expectedResponse: phaseIndex >= 3 ? `#response-${response}` : null,
           captionMatches: document.getElementById('video-caption-live').textContent.includes(chapter.text),
           textFree: document.querySelectorAll('#whiteboard-art text').length === 0,
+          focusRingCount: document.querySelectorAll('#whiteboard-art .focus-ring').length,
           drawSteps: [...phase.querySelectorAll('[data-draw-step]')].map((element) => element.dataset.drawStep)
         });
       }
@@ -266,18 +309,22 @@ test('story-matched drawings build continuously across 32 chapter reviews', asyn
     return results;
   });
 
-  expect(reviews).toHaveLength(32);
+  expect(reviews).toHaveLength(100);
   for (const [index, review] of reviews.entries()) {
     const phase = index % 4;
     expect(review.phase).toBe(String(phase));
     expect(review.activePhaseCount).toBe(phase + 1);
     expect(review.focus).toBe(String(phase));
+    expect(review.scene).toBe(review.expectedScene);
+    expect(review.actor).toBe(review.expectedActor);
     expect(review.subject).toBe(`#subject-${review.expectedScene}`);
     expect(review.issue).toBe(review.expectedIssue);
     expect(review.impact).toBe(review.expectedImpact);
     expect(review.response).toBe(review.expectedResponse);
+    expect(review.camera).toBe(review.expectedCamera);
     expect(review.captionMatches).toBe(true);
     expect(review.textFree).toBe(true);
+    expect(review.focusRingCount).toBe(0);
     expect(review.drawSteps).toContain('0');
     if (phase > 0) expect(review.drawSteps).toContain('1');
   }

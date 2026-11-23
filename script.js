@@ -1376,13 +1376,20 @@ function showCartoonChapter(index) {
   const art = document.getElementById('whiteboard-art');
   art.dataset.focus = String(index);
   const target = [
-    { x: 330, y: 325 },
-    { x: 540, y: 260 },
-    { x: 750, y: 390 },
-    { x: 990, y: 285 }
+    { x: 410, y: 325 },
+    { x: 615, y: 260 },
+    { x: 820, y: 390 },
+    { x: 1050, y: 285 }
   ][index];
   if (target) {
-    const targetAngle = Math.atan2(target.y - 270, target.x - 146);
+    const scale = 1.18;
+    const cameraX = 820 - target.x * scale;
+    const cameraY = 337.5 - target.y * scale;
+    document.getElementById('story-camera').setAttribute(
+      'transform',
+      `translate(${cameraX.toFixed(1)} ${cameraY.toFixed(1)}) scale(${scale})`
+    );
+    const targetAngle = Math.atan2(337.5 - 270, 820 - 146);
     const armAngle = Math.atan2(344 - 270, 190 - 146);
     const rotation = (targetAngle - armAngle) * (180 / Math.PI);
     document.getElementById('instructor-gesture').setAttribute('transform', `rotate(${rotation.toFixed(1)} 146 270)`);
@@ -1581,11 +1588,11 @@ function renderCartoonStory(story, sceneType) {
 function getWhiteboardSceneType(story) {
   const classify = (text) => {
     if (/hospital|healthcare|clinical|patient/.test(text)) return 'hospital';
+    if (/\brouters?\b|\bfirewalls?\b|\bvpn appliances?\b|\bnetwork appliances?\b|\bnetwork devices?\b|\bkvm devices?\b/.test(text)) return 'network';
     if (/chrome|browser|zero.day|web browser/.test(text)) return 'browser';
     if (/regulat|policy|compliance|legislation|disclosure rules/.test(text)) return 'policy';
     if (/mobile|telecom|phone|sim swap/.test(text)) return 'mobile';
     if (/supply.chain|dependency|open.source|package/.test(text)) return 'package';
-    if (/\brouters?\b|\bfirewalls?\b|\bvpn appliances?\b|\bnetwork appliances?\b|\bnetwork devices?\b|\bkvm devices?\b/.test(text)) return 'network';
     if (/agentic|agent & ai|\bai\b|artificial intelligence|\bllm\b|prompt injection|prompt theft|language model|inference provider/.test(text)) return 'ai';
     if (/identity|phishing|session.token|credential|data breach|data leak|stolen data/.test(text)) return 'identity';
     if (/cloud|kubernetes|container|secrets?/.test(text)) return 'cloud';
@@ -1644,10 +1651,12 @@ function renderVideoSlide() {
   const issueType = getWhiteboardIssueType(story, sceneType);
   const impactType = getWhiteboardImpactType(sceneType);
   const responseType = getWhiteboardResponseType(sceneType, issueType);
+  const actorType = sceneType === 'hospital' ? 'clinician' : sceneType === 'ot' ? 'operator' : 'analyst';
   art.dataset.sceneType = sceneType;
   art.dataset.issueType = issueType;
   art.dataset.impactType = impactType;
   art.dataset.responseType = responseType;
+  art.querySelectorAll('.actor-icon').forEach((icon) => icon.setAttribute('href', `#actor-${actorType}`));
   art.querySelectorAll('.subject-icon').forEach((icon) => icon.setAttribute('href', `#subject-${sceneType}`));
   art.querySelectorAll('.incident-symbol').forEach((icon) => icon.setAttribute('href', `#issue-${issueType}`));
   art.querySelectorAll('.impact-symbol').forEach((icon) => icon.setAttribute('href', `#impact-${impactType}`));

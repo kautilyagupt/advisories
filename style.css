@@ -2067,6 +2067,11 @@ h1 {
   background: #fffdf7;
 }
 
+.story-camera {
+  transform-origin: 0 0;
+  transition: transform 1100ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
 .board-paper {
   fill: #fffdf7;
   stroke: #e5dfd3;
@@ -2086,10 +2091,6 @@ h1 {
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.board-overview {
-  opacity: 0.2;
 }
 
 .whiteboard-ink {
@@ -2164,15 +2165,6 @@ h1 {
   transition: transform 0.35s ease;
 }
 
-.focus-ring {
-  fill: none;
-  stroke: #557f9c;
-  stroke-width: 2;
-  stroke-dasharray: 3 9;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
 .board-phase {
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -2182,8 +2174,12 @@ h1 {
   opacity: 1;
 }
 
-.board-phase.is-current .focus-ring {
-  opacity: 1;
+.board-phase.is-active:not(.is-current) {
+  opacity: 0.16;
+}
+
+.board-phase[data-phase="0"].is-active:not(.is-current) {
+  opacity: 0.06;
 }
 
 .board-phase.draw-in [data-draw-step],
@@ -2278,6 +2274,10 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .story-camera {
+    transition: none !important;
+  }
+
   .board-phase,
   .board-phase.draw-in [data-draw-step],
   .board-phase.draw-in [data-draw-step] > * {
@@ -2291,9 +2291,6 @@ h1 {
     stroke-dasharray: none !important;
   }
 
-  .video-stage.is-playing .board-phase.is-current .focus-ring {
-    animation: none !important;
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2302,17 +2299,8 @@ h1 {
     stroke-dashoffset: 0;
     animation: data-flow 1.6s linear infinite;
   }
-
-  .video-stage.is-playing .board-phase.is-current .focus-ring {
-    stroke-dasharray: 3 9;
-    animation: focus-sweep 5s linear infinite;
-  }
 }
 
 @keyframes data-flow {
   to { stroke-dashoffset: -56; }
-}
-
-@keyframes focus-sweep {
-  to { stroke-dashoffset: -72; }
 }
