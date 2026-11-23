@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cyber-pulse-v12';
-const CORE_ASSETS = ['./', './index.html', './style.css?v=20261123i', './script.js?v=20261123i', './manifest.json'];
+const CACHE_NAME = 'cyber-pulse-v16';
+const CORE_ASSETS = ['./', './index.html', './style.css?v=20261123m', './script.js?v=20261123m', './manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));

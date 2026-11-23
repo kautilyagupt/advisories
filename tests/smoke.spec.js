@@ -220,20 +220,54 @@ test('silent playback builds a scene continuously and advances to the next story
   expect(progression.nextStory).toEqual({ index: 1, scene: 'network', phase: '0' });
 });
 
-test('camera pans between story beats instead of cutting between slides', async ({ page }) => {
-  await page.waitForTimeout(1200);
-  const start = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
+test('one continuous scene remains visible while each chapter is revealed', async ({ page }) => {
+  const start = await page.evaluate(() => {
+    videoBrief.playing = false;
+    videoBrief.voiceEnabled = false;
+    videoBrief.stories = [{ title: 'Router vulnerability exploited', summary: 'Attackers target exposed network devices.', category: 'Vulnerability' }];
+    videoBrief.index = 0;
+    renderVideoSlide();
+    return {
+      camera: document.getElementById('story-camera').getAttribute('transform'),
+      gesture: document.getElementById('instructor-gesture').getAttribute('transform')
+    };
+  });
   await page.locator('[data-chapter="1"]').click();
-  await page.waitForTimeout(150);
-  const moving = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
-  await page.waitForTimeout(1200);
-  const end = await page.evaluate(() => getComputedStyle(document.getElementById('story-camera')).transform);
+  const next = await page.evaluate(() => ({
+    camera: document.getElementById('story-camera').getAttribute('transform'),
+    gesture: document.getElementById('instructor-gesture').getAttribute('transform'),
+    phaseCount: document.querySelectorAll('.board-phase.is-active').length,
+    previousPhaseOpacity: Number(getComputedStyle(document.querySelector('.board-phase[data-phase="0"]')).opacity)
+  }));
 
-  expect(moving).not.toBe(start);
-  expect(moving).not.toBe(end);
+  expect(next.camera).toBe(start.camera);
+  expect(next.gesture).not.toBe(start.gesture);
+  expect(next.phaseCount).toBe(2);
+  expect(next.previousPhaseOpacity).toBeGreaterThan(0.1);
 });
 
-test('story camera follows 100 narrative checkpoints across 25 stories', async ({ page }) => {
+test('playback animates only the route for the current beat', async ({ page }) => {
+  const routes = await page.evaluate(() => {
+    videoBrief.playing = false;
+    videoBrief.voiceEnabled = false;
+    videoBrief.stories = [{ title: 'Router vulnerability exploited', summary: 'Attackers target exposed network devices.', category: 'Vulnerability' }];
+    videoBrief.index = 0;
+    renderVideoSlide();
+    showCartoonChapter(2);
+    document.getElementById('video-stage').classList.add('is-playing');
+    return {
+      routes: [1, 2, 3].map((phase) => getComputedStyle(
+        document.querySelector(`.board-phase[data-phase="${phase}"] .flow-path`)
+      ).animationName),
+      pointer: getComputedStyle(document.getElementById('instructor-pointer')).animationName
+    };
+  });
+
+  expect(routes.routes).toEqual(['none', 'data-flow', 'none']);
+  expect(routes.pointer).toBe('instructor-pointer-draw');
+});
+
+test('full scene supports 100 narrative checkpoints across 25 stories', async ({ page }) => {
   const reviews = await page.evaluate(() => {
     const cases = [
       [{ title: 'Prompt data stolen at AI providers', summary: 'Attackers stole data from AI inference providers for months.', category: 'Data Breach' }, 'ai'],
@@ -263,12 +297,7 @@ test('story camera follows 100 narrative checkpoints across 25 stories', async (
       [{ title: 'Enterprise database accessed by intruder', summary: 'Investigators confirmed unauthorized access to records.', category: 'Threat Intelligence' }, 'server']
     ];
     const results = [];
-    const cameraTargets = [
-      { x: 410, y: 325 },
-      { x: 615, y: 260 },
-      { x: 820, y: 390 },
-      { x: 1050, y: 285 }
-    ];
+    const beatTargets = [{ x: 410, y: 325 }, { x: 615, y: 260 }, { x: 820, y: 390 }, { x: 615, y: 260 }];
     for (const [story, expectedScene] of cases) {
       videoBrief.stories = [story];
       videoBrief.index = 0;
@@ -281,21 +310,27 @@ test('story camera follows 100 narrative checkpoints across 25 stories', async (
         const phase = document.querySelector('.board-phase.is-current');
         const activePhases = document.querySelectorAll('.board-phase.is-active');
         const chapter = videoBrief.chapters[phaseIndex];
-        const target = cameraTargets[phaseIndex];
         results.push({
           phase: phase.getAttribute('data-phase'),
           activePhaseCount: activePhases.length,
           focus: document.getElementById('whiteboard-art').dataset.focus,
           scene,
           expectedScene,
+          setting: document.querySelector('.setting-icon').getAttribute('href'),
+          expectedSetting: `#setting-${scene === 'hospital' ? 'clinical' : scene === 'ot' ? 'industrial' : ['network', 'cloud', 'server'].includes(scene) ? 'operations' : 'office'}`,
           actor: document.querySelector('.board-phase[data-phase="0"] .actor-icon').getAttribute('href'),
           expectedActor: `#actor-${scene === 'hospital' ? 'clinician' : scene === 'ot' ? 'operator' : 'analyst'}`,
           subject: document.querySelector('.board-phase .subject-icon').getAttribute('href'),
+          incidentPlacement: ['x', 'y', 'width', 'height'].map((attribute) => document.querySelector('.incident-symbol').getAttribute(attribute)),
+          responsePlacement: ['x', 'y', 'width', 'height'].map((attribute) => document.querySelector('.response-symbol').getAttribute(attribute)),
           issue: [...document.querySelectorAll('.board-phase.is-active .incident-symbol')].pop()?.getAttribute('href') || null,
           impact: [...document.querySelectorAll('.board-phase.is-active .impact-symbol')].pop()?.getAttribute('href') || null,
           response: [...document.querySelectorAll('.board-phase.is-active .response-symbol')].pop()?.getAttribute('href') || null,
           camera: document.getElementById('story-camera').getAttribute('transform'),
-          expectedCamera: `translate(${(820 - target.x * 1.18).toFixed(1)} ${(337.5 - target.y * 1.18).toFixed(1)}) scale(1.18)`,
+          expectedCamera: 'translate(0 0) scale(1)',
+          pointerTarget: document.getElementById('instructor-pointer').getAttribute('d').split(' L').pop().split(' ').map(Number),
+          expectedPointerTarget: [beatTargets[phaseIndex].x, beatTargets[phaseIndex].y],
+          incidentResolved: document.querySelector('.board-phase[data-phase="1"]').classList.contains('is-resolved'),
           expectedIssue: phaseIndex >= 1 ? `#issue-${issue}` : null,
           expectedImpact: phaseIndex >= 2 ? `#impact-${getWhiteboardImpactType(scene)}` : null,
           expectedResponse: phaseIndex >= 3 ? `#response-${response}` : null,
@@ -316,12 +351,16 @@ test('story camera follows 100 narrative checkpoints across 25 stories', async (
     expect(review.activePhaseCount).toBe(phase + 1);
     expect(review.focus).toBe(String(phase));
     expect(review.scene).toBe(review.expectedScene);
+    expect(review.setting).toBe(review.expectedSetting);
     expect(review.actor).toBe(review.expectedActor);
     expect(review.subject).toBe(`#subject-${review.expectedScene}`);
+    expect(review.responsePlacement).toEqual(review.incidentPlacement);
     expect(review.issue).toBe(review.expectedIssue);
     expect(review.impact).toBe(review.expectedImpact);
     expect(review.response).toBe(review.expectedResponse);
     expect(review.camera).toBe(review.expectedCamera);
+    expect(review.pointerTarget).toEqual(review.expectedPointerTarget);
+    expect(review.incidentResolved).toBe(phase === 3);
     expect(review.captionMatches).toBe(true);
     expect(review.textFree).toBe(true);
     expect(review.focusRingCount).toBe(0);

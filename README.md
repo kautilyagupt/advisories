@@ -18,7 +18,7 @@ A professional, privacy-friendly cybersecurity intelligence briefing for GitHub 
 - Browser smoke-test suite under `tests/`
 - Story-aware adaptive knowledge checks with explanations and topic review
 - Local best-score, attempt count, and weak-topic progress tracking
-- Text-free, instructor-led whiteboard lessons that pan across one connected 16:9 scene as context, incident, impact, and response are drawn; the people and symbols adapt to the topic, earlier events recede as the story progresses, captions stay outside the drawing, and optional device narration quality varies by device
+- Text-free, instructor-led whiteboard lessons keep one complete 16:9 scene in view while context, incident, impact, and response are drawn in sequence; the instructor points to each beat, the response returns to the affected system, and topic-matched people, symbols, and settings build one causal scene while earlier events remain visible; captions stay outside the drawing and optional device narration quality varies by device
 
 ## How to view it
 Open [index.html](index.html) in a browser.

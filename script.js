@@ -1379,26 +1379,29 @@ function showCartoonChapter(index) {
     { x: 410, y: 325 },
     { x: 615, y: 260 },
     { x: 820, y: 390 },
-    { x: 1050, y: 285 }
+    { x: 615, y: 260 }
   ][index];
   if (target) {
-    const scale = 1.18;
-    const cameraX = 820 - target.x * scale;
-    const cameraY = 337.5 - target.y * scale;
-    document.getElementById('story-camera').setAttribute(
-      'transform',
-      `translate(${cameraX.toFixed(1)} ${cameraY.toFixed(1)}) scale(${scale})`
-    );
-    const targetAngle = Math.atan2(337.5 - 270, 820 - 146);
+    const targetAngle = Math.atan2(target.y - 270, target.x - 146);
     const armAngle = Math.atan2(344 - 270, 190 - 146);
     const rotation = (targetAngle - armAngle) * (180 / Math.PI);
     document.getElementById('instructor-gesture').setAttribute('transform', `rotate(${rotation.toFixed(1)} 146 270)`);
+    const radians = rotation * (Math.PI / 180);
+    const handX = 146 + Math.cos(radians) * 44 - Math.sin(radians) * 74;
+    const handY = 270 + Math.sin(radians) * 44 + Math.cos(radians) * 74;
+    const pointer = document.getElementById('instructor-pointer');
+    pointer.setAttribute('d', `M${(24 + handX * 0.76).toFixed(1)} ${(140 + handY * 0.76).toFixed(1)} L${target.x} ${target.y}`);
+    pointer.classList.remove('draw-in');
+    void pointer.getBoundingClientRect();
+    pointer.classList.add('draw-in');
   }
   document.querySelectorAll('.board-phase').forEach((phase, phaseIndex) => {
     const visible = phaseIndex <= index;
     const current = phaseIndex === index;
     phase.classList.toggle('is-active', visible);
     phase.classList.toggle('is-current', current);
+    phase.classList.toggle('is-past', visible && !current);
+    phase.classList.toggle('is-resolved', index === 3 && phaseIndex === 1);
     phase.classList.remove('draw-in');
     if (current) {
       void phase.getBoundingClientRect();
@@ -1618,6 +1621,13 @@ function getWhiteboardIssueType(story, sceneType) {
   return 'default';
 }
 
+function getWhiteboardSettingType(sceneType) {
+  if (sceneType === 'hospital') return 'clinical';
+  if (sceneType === 'ot') return 'industrial';
+  if (sceneType === 'network' || sceneType === 'cloud' || sceneType === 'server') return 'operations';
+  return 'office';
+}
+
 function renderVideoSlide() {
   const storiesToShow = videoBrief.stories;
   if (!storiesToShow.length) {
@@ -1651,17 +1661,20 @@ function renderVideoSlide() {
   const issueType = getWhiteboardIssueType(story, sceneType);
   const impactType = getWhiteboardImpactType(sceneType);
   const responseType = getWhiteboardResponseType(sceneType, issueType);
+  const settingType = getWhiteboardSettingType(sceneType);
   const actorType = sceneType === 'hospital' ? 'clinician' : sceneType === 'ot' ? 'operator' : 'analyst';
   art.dataset.sceneType = sceneType;
   art.dataset.issueType = issueType;
   art.dataset.impactType = impactType;
   art.dataset.responseType = responseType;
+  art.dataset.settingType = settingType;
+  art.querySelector('.setting-icon').setAttribute('href', `#setting-${settingType}`);
   art.querySelectorAll('.actor-icon').forEach((icon) => icon.setAttribute('href', `#actor-${actorType}`));
   art.querySelectorAll('.subject-icon').forEach((icon) => icon.setAttribute('href', `#subject-${sceneType}`));
   art.querySelectorAll('.incident-symbol').forEach((icon) => icon.setAttribute('href', `#issue-${issueType}`));
   art.querySelectorAll('.impact-symbol').forEach((icon) => icon.setAttribute('href', `#impact-${impactType}`));
   art.querySelectorAll('.response-symbol').forEach((icon) => icon.setAttribute('href', `#response-${responseType}`));
-  art.setAttribute('aria-label', `Instructor-led whiteboard story about ${story.category || 'cybersecurity'} affecting ${sceneType} systems, with ${impactType} consequences and a ${responseType} response`);
+  art.setAttribute('aria-label', `Instructor-led whiteboard story about ${story.category || 'cybersecurity'} affecting ${sceneType} systems in a ${settingType} setting, with ${impactType} consequences and a ${responseType} response`);
   document.getElementById('video-slide-counter').textContent =
     `${videoBrief.index + 1} / ${storiesToShow.length} · Beat 1 / 4`;
   renderCartoonStory(story, sceneType);
