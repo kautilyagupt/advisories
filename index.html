@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <link rel="manifest" href="manifest.json" />
     <title>Cyber Pulse Daily</title>
-    <link rel="stylesheet" href="style.css?v=20261123m" />
+    <link rel="stylesheet" href="style.css?v=20261123n" />
   </head>
   <body>
     <noscript><div class="noscript-banner">JavaScript is disabled. Enable it to load live intelligence, filters, and watchlists.</div></noscript>
@@ -612,6 +612,26 @@
             <button id="video-next" class="video-icon-button" type="button" aria-label="Next story">→</button>
           </div>
         </div>
+        <section class="ai-video-panel" aria-labelledby="ai-video-title">
+          <div class="ai-video-copy">
+            <p class="eyebrow">Optional generative footage</p>
+            <h3 id="ai-video-title">Make a cinematic scene for this incident</h3>
+            <p>The selected headline, summary, and response are sent to Runway to create a five-second illustrative reenactment. It is not documentary footage. Gen-4.5 is currently about $0.60 per clip; the task estimate and final charge are shown when Runway returns them.</p>
+          </div>
+          <div class="ai-video-actions">
+            <div id="ai-video-turnstile" aria-label="Security check"></div>
+            <button id="ai-video-generate" class="tool-button" type="button" disabled>Generate this story · about $0.60</button>
+          </div>
+          <p id="ai-video-status" class="video-audio-status" aria-live="polite">Checking whether secure video generation is configured…</p>
+          <div id="ai-video-result" class="ai-video-result" hidden>
+            <video id="ai-generated-video" controls playsinline preload="metadata" aria-label="AI-generated illustrative incident video"></video>
+            <div class="ai-video-result-meta">
+              <p id="ai-generated-video-title"></p>
+              <a id="ai-generated-video-download" class="tool-button" target="_blank" rel="noopener noreferrer">Open or download video</a>
+            </div>
+            <p class="ai-video-disclaimer">Illustrative AI-generated scene, not actual footage. Runway output links expire after 24–48 hours; download anything you want to keep.</p>
+          </div>
+        </section>
         <div class="video-caption-panel">
           <span class="video-caption-label">Narration captions · outside the drawing</span>
           <p id="video-caption-live" aria-live="polite">Story narration will appear here when the briefing loads.</p>
@@ -745,6 +765,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=20261123m"></script>
+    <script src="script.js?v=20261123n"></script>
   </body>
 </html>

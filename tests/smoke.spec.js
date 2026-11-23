@@ -166,6 +166,11 @@ test('AI prompt-theft stories are not misclassified from an industrial source me
   expect(result.summary).not.toContain('stolen requests w');
 });
 
+test('AI video generation stays disabled when the secure provider backend is missing', async ({ page }) => {
+  await expect(page.locator('#ai-video-generate')).toBeDisabled();
+  await expect(page.locator('#ai-video-status')).toContainText(/not available on this host|not configured on this host/i);
+});
+
 test('narration captions follow chapters outside the text-free drawing', async ({ page }) => {
   const captions = page.locator('#video-caption-live');
   await expect(captions).toBeVisible();

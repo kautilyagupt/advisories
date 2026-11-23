@@ -307,6 +307,13 @@ let videoBrief = {
   currentStory: null
 };
 
+let aiVideoGeneration = {
+  available: false,
+  widgetId: null,
+  turnstileToken: null,
+  busy: false
+};
+
 function formatDate() {
   return new Intl.DateTimeFormat('en', {
     weekday: 'long',
@@ -996,6 +1003,9 @@ async function init() {
 
   updateQuizStartStats();
 
+  initializeAIVideoGeneration();
+  document.getElementById('ai-video-generate')?.addEventListener('click', generateAIVideo);
+
   document.getElementById('video-play')?.addEventListener('click', () => {
     if (videoBrief.playing) {
       stopVideoBrief();
@@ -1678,6 +1688,167 @@ function renderVideoSlide() {
   document.getElementById('video-slide-counter').textContent =
     `${videoBrief.index + 1} / ${storiesToShow.length} · Beat 1 / 4`;
   renderCartoonStory(story, sceneType);
+}
+
+function setAIVideoStatus(message) {
+  const status = document.getElementById('ai-video-status');
+  if (status) status.textContent = message;
+}
+
+function loadTurnstile() {
+  if (window.turnstile) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-turnstile-api]');
+    if (existing) {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', () => reject(new Error('Cloudflare security check could not load.')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.dataset.turnstileApi = 'true';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Cloudflare security check could not load.'));
+    document.head.appendChild(script);
+  });
+}
+
+async function initializeAIVideoGeneration() {
+  const button = document.getElementById('ai-video-generate');
+  if (!button) return;
+
+  try {
+    const response = await fetch('/api/video/config', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Secure video generation is not available on this host.');
+    const config = await response.json();
+    if (!config.configured || !config.turnstileSiteKey) {
+      throw new Error('Secure video generation is not configured on this host. It requires a server deployment with Runway and Turnstile credentials.');
+    }
+
+    await loadTurnstile();
+    window.turnstile.ready(() => {
+      aiVideoGeneration.available = true;
+      aiVideoGeneration.widgetId = window.turnstile.render('#ai-video-turnstile', {
+        sitekey: config.turnstileSiteKey,
+        callback: (token) => {
+          aiVideoGeneration.turnstileToken = token;
+          button.disabled = aiVideoGeneration.busy;
+        },
+        'expired-callback': () => {
+          aiVideoGeneration.turnstileToken = null;
+          button.disabled = true;
+        },
+        'error-callback': () => {
+          aiVideoGeneration.turnstileToken = null;
+          button.disabled = true;
+          setAIVideoStatus('The security check failed to load. Refresh the page and try again.');
+        }
+      });
+      setAIVideoStatus('Complete the security check to generate an illustrative clip. Runway bills your configured account.');
+    });
+  } catch (error) {
+    aiVideoGeneration.available = false;
+    button.disabled = true;
+    setAIVideoStatus(error instanceof TypeError
+      ? 'Could not reach the secure video backend. This host needs Cloudflare Pages Functions and Runway/Turnstile configuration.'
+      : error.message);
+  }
+}
+
+async function parseAIVideoResponse(response) {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('The secure video service returned an unreadable response.');
+  }
+}
+
+function waitForVideoPoll() {
+  return new Promise((resolve) => setTimeout(resolve, 5000));
+}
+
+async function pollAIVideoTask(taskId) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    await waitForVideoPoll();
+    const response = await fetch(`/api/video/tasks/${encodeURIComponent(taskId)}`, { cache: 'no-store' });
+    const task = await parseAIVideoResponse(response);
+    if (!response.ok) throw new Error(task.error || 'The video task status could not be checked.');
+
+    if (task.status === 'SUCCEEDED' && typeof task.videoUrl === 'string') return task;
+    if (task.status === 'FAILED' || task.status === 'CANCELLED') {
+      throw new Error(task.error || 'Runway could not generate this scene.');
+    }
+
+    const progressPercent = task.progress <= 1 ? task.progress * 100 : task.progress;
+    const progress = Number.isFinite(progressPercent) ? ` (${Math.round(progressPercent)}%)` : '';
+    setAIVideoStatus(`Runway is generating the illustrative scene${progress}. This can take a few minutes.`);
+  }
+  throw new Error('Video generation is taking longer than expected. The task may still finish; check Runway before starting another paid generation.');
+}
+
+async function generateAIVideo() {
+  const button = document.getElementById('ai-video-generate');
+  const story = videoBrief.currentStory;
+  if (!button || !story || !aiVideoGeneration.available || !aiVideoGeneration.turnstileToken || aiVideoGeneration.busy) return;
+
+  const token = aiVideoGeneration.turnstileToken;
+  aiVideoGeneration.turnstileToken = null;
+  aiVideoGeneration.busy = true;
+  button.disabled = true;
+  document.getElementById('ai-video-result').hidden = true;
+  const previousVideo = document.getElementById('ai-generated-video');
+  previousVideo.pause();
+  previousVideo.removeAttribute('src');
+  previousVideo.load();
+  setAIVideoStatus('Sending this story to Runway for a five-second illustrative scene…');
+
+  if (aiVideoGeneration.widgetId !== null) window.turnstile.reset(aiVideoGeneration.widgetId);
+
+  try {
+    const sceneType = getWhiteboardSceneType(story);
+    const responseChapter = videoBrief.chapters[3];
+    const response = await fetch('/api/video/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({
+        turnstileToken: token,
+        story: {
+          title: story.title,
+          summary: story.summary || story.title,
+          response: responseChapter ? responseChapter.text : story.takeaway || 'Verify affected systems and restore safe operations.',
+          sceneType
+        }
+      })
+    });
+    const task = await parseAIVideoResponse(response);
+    if (!response.ok) throw new Error(task.error || 'Runway rejected the video request.');
+
+    const estimate = Number.isFinite(task.estimatedCostUsd)
+      ? ` Estimated cost: $${task.estimatedCostUsd.toFixed(2)}.`
+      : '';
+    setAIVideoStatus(`Runway accepted the video task.${estimate} Waiting for the generated scene…`);
+    const result = await pollAIVideoTask(task.taskId);
+    const videoUrl = new URL(result.videoUrl);
+    if (videoUrl.protocol !== 'https:') throw new Error('Runway returned a video URL that is not secure.');
+
+    previousVideo.src = videoUrl.href;
+    previousVideo.load();
+    document.getElementById('ai-generated-video-title').textContent = `Illustrative scene for: ${story.title}`;
+    const downloadLink = document.getElementById('ai-generated-video-download');
+    downloadLink.href = videoUrl.href;
+    downloadLink.setAttribute('download', 'cyber-pulse-illustrative-scene.mp4');
+    document.getElementById('ai-video-result').hidden = false;
+    const finalCost = Number.isFinite(result.costCredits) ? ` Final charge: $${(result.costCredits / 100).toFixed(2)}.` : '';
+    setAIVideoStatus(`Your illustrative clip is ready.${finalCost} Download it within 24–48 hours.`);
+  } catch (error) {
+    setAIVideoStatus(error.message);
+  } finally {
+    aiVideoGeneration.busy = false;
+    button.disabled = !aiVideoGeneration.turnstileToken;
+  }
 }
 
 function stopVideoBrief() {
